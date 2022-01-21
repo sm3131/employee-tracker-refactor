@@ -1,4 +1,3 @@
-// const express = require('express');
 const db = require('./db/connection');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
@@ -6,7 +5,6 @@ const cTable = require('console.table');
 // Connect to database
 db.connect(err => {
     if (err) throw err;
-    //console.log('Database connected.');
 });
 
 console.log('Welcome to the Employee Tracker Application! With this app you can view and manage both your company and employee information. Answer the prompt below to get started.');
@@ -17,7 +15,7 @@ function welcome() {
             type: 'list',
             name: 'trackerOptions',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee', 'Leave application']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Leave application']
         })
         .then (({ trackerOptions }) => {
             if(trackerOptions === 'View all departments') {
@@ -41,7 +39,7 @@ function welcome() {
         })
 }
 
-async function viewDepartments() {
+function viewDepartments() {
     db.promise().query(`SELECT * FROM departments`)
     .then(([rows,fields]) => {
         console.table(rows)
@@ -51,7 +49,10 @@ async function viewDepartments() {
 }
 
 function viewRoles() {
-    db.promise().query(`SELECT * FROM roles`)
+    db.promise().query(
+    `SELECT roles.id, roles.title AS job_title, roles.salary, departments.name AS department_name
+    FROM roles
+    LEFT JOIN departments ON roles.departments_id = departments.id`)
     .then(([rows,fields]) => {
         console.table(rows)
     })
@@ -60,7 +61,17 @@ function viewRoles() {
 }
 
 function viewEmployees() {
-    db.promise().query(`SELECT * FROM employees`)
+    db.promise().query(`
+    SELECT employees.id, employees.first_name, employees.last_name, roles.title AS job_title, roles.salary, departments.name AS department_name  
+    FROM employees
+    LEFT JOIN departments ON roles.departments_id = departments.id
+    LEFT JOIN employees ON employees.manager_id = employees.id`)
+    // (`
+    // SELECT employees.id, employees.first_name, employees.last_name, roles.title AS job_title, roles.salary, departments.name AS department_name  
+    // FROM employees
+    // LEFT JOIN roles ON employees.roles_id = roles.id
+    // LEFT JOIN departments ON roles.departments_id = departments.id
+    // INNER JOIN employees ON employees.manager_id = employees.id`)
     .then(([rows,fields]) => {
         console.table(rows)
     })
