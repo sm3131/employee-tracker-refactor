@@ -1,0 +1,25 @@
+{
+  "name": "employee-tracker",
+  "version": "1.0.0",
+  "description": "Application to track and manage employee and workplace information stored in databases",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sm3131/employee-tracker.git"
+  },
+  "author": "Sammi Moore",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sm3131/employee-tracker/issues"
+  },
+  "homepage": "https://github.com/sm3131/employee-tracker#readme",
+  "dependencies": {
+    "express": "^4.17.2",
+    "inquirer": "^8.2.0",
+    "mysql2": "^2.3.3"
+  }
+}
