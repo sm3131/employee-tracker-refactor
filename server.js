@@ -1,7 +1,7 @@
 // const express = require('express');
 const db = require('./db/connection');
 const inquirer = require('inquirer');
-//const mysql = require('mysql2');
+const cTable = require('console.table');
 
 // Connect to database
 db.connect(err => {
@@ -41,24 +41,31 @@ function welcome() {
         })
 }
 
-function viewDepartments() {
-    db.query(`SELECT * FROM departments`, (err, results) => {
-        if(err) {
-            console.log(err);
-        }
-        console.log(results);
+async function viewDepartments() {
+    db.promise().query(`SELECT * FROM departments`)
+    .then(([rows,fields]) => {
+        console.table(rows)
     })
-    welcome();
+    .catch(console.log)
+    .then( () => welcome())
 }
 
 function viewRoles() {
-    console.log('view roles');
-    welcome();
+    db.promise().query(`SELECT * FROM roles`)
+    .then(([rows,fields]) => {
+        console.table(rows)
+    })
+    .catch(console.log)
+    .then( () => welcome())
 }
 
 function viewEmployees() {
-    console.log('view employees');
-    welcome();
+    db.promise().query(`SELECT * FROM employees`)
+    .then(([rows,fields]) => {
+        console.table(rows)
+    })
+    .catch(console.log)
+    .then( () => welcome())
 }
 
 function addDepartment() {
