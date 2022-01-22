@@ -25,7 +25,10 @@ function welcome() {
             } else if(trackerOptions === 'View all employees') {
                 viewEmployees();
             } else if(trackerOptions === 'Add a department') {
-                addDepartment();
+                addDepartment().then(value => {
+                    const departmentName = value.department
+                    console.log(departmentName)
+                    insertDepartment(departmentName)})
             } else if(trackerOptions === 'Add a role') {
                 addRole();
             } else if (trackerOptions === 'Add an employee') {
@@ -81,8 +84,35 @@ function viewEmployees() {
 }
 
 function addDepartment() {
-    console.log('add departments');
-    welcome();
+    return inquirer
+    .prompt (
+        {
+            type: 'input',
+            name: 'department',
+            message: 'Please enter the name of the department you would like to add.',
+            validate: value => {
+                if (value) {
+                    return true;
+                } else {
+                    console.log("Please enter a department name!");
+                    return false;
+                }
+            }
+        })
+    }
+
+function insertDepartment(department) {
+    const sql = `INSERT INTO departments (name) VALUES (?)`;
+    const param = [department];
+
+    db.promise().query(sql, param)
+    .then(() => {
+        console.log('Department has been added');
+    })
+    .catch((err) => {
+        console.log(err.message);
+    })
+    .then( () => welcome())
 }
 
 function addRole() {
