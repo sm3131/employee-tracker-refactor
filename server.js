@@ -44,7 +44,9 @@ function viewDepartments() {
     .then(([rows,fields]) => {
         console.table(rows)
     })
-    .catch(console.log)
+    .catch((err) => {
+        console.log(err.message);
+    })
     .then( () => welcome())
 }
 
@@ -56,26 +58,25 @@ function viewRoles() {
     .then(([rows,fields]) => {
         console.table(rows)
     })
-    .catch(console.log)
+    .catch((err) => {
+        console.log(err.message);
+    })
     .then( () => welcome())
 }
 
 function viewEmployees() {
-    db.promise().query(`
-    SELECT employees.id, employees.first_name, employees.last_name, roles.title AS job_title, roles.salary, departments.name AS department_name  
-    FROM employees
-    LEFT JOIN departments ON roles.departments_id = departments.id
-    LEFT JOIN employees ON employees.manager_id = employees.id`)
-    // (`
-    // SELECT employees.id, employees.first_name, employees.last_name, roles.title AS job_title, roles.salary, departments.name AS department_name  
-    // FROM employees
-    // LEFT JOIN roles ON employees.roles_id = roles.id
-    // LEFT JOIN departments ON roles.departments_id = departments.id
-    // INNER JOIN employees ON employees.manager_id = employees.id`)
+    db.promise().query(
+    `SELECT employees.id, employees.first_name AS employee_first, employees.last_name AS employee_last, managers.first_name AS manager_first, managers.last_name AS manager_last, roles.title AS job_title, roles.salary, departments.name AS department_name  
+    FROM employees 
+    LEFT JOIN employees AS managers ON employees.manager_id = managers.id
+    LEFT JOIN roles ON employees.roles_id = roles.id
+    LEFT JOIN departments ON roles.departments_id = departments.id`)
     .then(([rows,fields]) => {
         console.table(rows)
     })
-    .catch(console.log)
+    .catch((err) => {
+        console.log(err.message);
+    })
     .then( () => welcome())
 }
 
