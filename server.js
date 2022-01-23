@@ -30,9 +30,11 @@ function welcome() {
                     insertDepartment(departmentName)
                 })
             } else if (trackerOptions === 'Add a role') {
-                getChoices();
+                getDepartmentChoices();
             } else if (trackerOptions === 'Add an employee') {
-                addEmployee();
+                getRoleChoices();
+                getManagerChoices();
+                addEmployee(roleTitles, managersArr);
             } else if (trackerOptions === 'Update an employee') {
                 updateEmployee();
             } else if (trackerOptions === 'Leave application') {
@@ -182,44 +184,160 @@ function addRole(department) {
         })
 }
 
-function getChoices() {
+function getDepartmentChoices() {
     db.promise().query(`SELECT * FROM departments`)
         .then(([rows, fields]) => {
             addRole(rows);
         })
 }
 
-function addEmployee() {
-    inquirer
-    .prompt([
-        {
-            type:'input',
-            name:'firstName',
-            message:"Please enter the employee's first name",
-            validate: value => {
-                if (value) {
-                    return true;
-                } else {
-                    console.log("Please enter the employee's first name!");
-                    return false;
-                }
-            }
-        },
-        {
-            type:'input',
-            name:'lastName',
-            message:"Please enter the employee's last name",
-            validate: value => {
-                if (value) {
-                    return true;
-                } else {
-                    console.log("Please enter the employee's last name!");
-                    return false;
-                }
-            }
-        }
-    ])
+function getRoleChoices() {
+    db.promise().query(`SELECT * FROM roles`)
+        .then(([rows, fields]) => {
+            createRolesArr(rows);
+        })
 }
+
+function getManagerChoices() {
+    db.promise().query(`SELECT * FROM employees`)
+        .then(([rows, fields]) => {
+            createManagersArr(rows);
+        })
+}
+
+let roleTitles = []
+function createRolesArr(roles) {
+    roles.forEach(obj => {
+        roleTitles.push(obj.title)
+    })
+    //console.log(roleTitles);
+}
+
+let managersArr = ['null']
+function createManagersArr(managers) {
+    managers.forEach(obj => {
+        fullName = obj.first_name + " " + obj.last_name
+        managersArr.push(fullName)
+    })
+    //console.log(managersArr);
+}
+
+function addEmployee(roles, managers) {
+    inquirer
+        .prompt([
+            {
+                type: 'input',
+                name: 'firstName',
+                message: "Please enter the employee's first name",
+                validate: value => {
+                    if (value) {
+                        return true;
+                    } else {
+                        console.log("Please enter the employee's first name!");
+                        return false;
+                    }
+                }
+            },
+            {
+                type: 'input',
+                name: 'lastName',
+                message: "Please enter the employee's last name",
+                validate: value => {
+                    if (value) {
+                        return true;
+                    } else {
+                        console.log("Please enter the employee's last name!");
+                        return false;
+                    }
+                }
+            },
+            {
+                type: 'list',
+                name: 'employeeRole',
+                message: "Please select the employee's this role from the list of options below.",
+                choices: roles
+            },
+            {
+                type: 'list',
+                name: 'employeeManager',
+                message: "Please select the employee's manager from the list of options below, or select null if this does not apply.",
+                choices: managers
+            }
+        ])
+        .then(value => {
+            getEmployeeParams(value);
+            //console.log(employeeParams);
+        })
+}
+
+let employeeParams = []
+function getEmployeeParams(value) {
+    firstName = value.firstName;
+    lastName = value.lastName;
+    newRole = value.employeeRole;
+    newManager = value.employeeManager;
+    console.log(newManager);
+
+    employeeParams.push(firstName, lastName);
+
+    db.query(`SELECT * FROM roles`, function(err, results) {
+       //let roleId = 
+       getRoleId(results);
+       //employeeParams.push(roleId);
+       //console.log(employeeParams);
+    })
+
+    db.query(`SELECT * FROM employees`, function(err, results) {
+        //let managerId = 
+        getManagerId(results);
+        //employeeParams.push(managerId);
+        //console.log(employeeParams);
+     }) 
+}
+
+function getRoleId(roles) {
+    let rolesArr = roles;
+    let roleNumber = rolesArr.filter(getRealRoleId)
+    let realRoleNumber = roleNumber[0].id
+    function getRealRoleId(item) {
+        if(item.title === newRole) {
+            return item
+        }
+    }
+    console.log(realRoleNumber);
+    employeeParams.push(realRoleNumber);
+}
+
+function getManagerId(managers) {
+    let managerArr = managers;
+    let managerNumber = managerArr.filter(getRealManagerId)
+    let realManagerNumber = managerNumber[0].id
+    function getRealManagerId(item) {
+        if(item.first_name + " " + item.last_name === newManager) {
+            return item
+        }
+    }
+    console.log(realManagerNumber);
+    employeeParams.push(realManagerNumber);
+    console.log(employeeParams);
+    insertEmployee(employeeParams);
+}
+function insertEmployee() {
+    const sql = `INSERT INTO employees (first_name, last_name, roles_id, manager_id)
+    VALUES (?,?,?,?)`
+    const params = employeeParams
+    console.log(params);
+    
+    db.promise().query(sql, params)
+        .then(() => {
+            console.log('Employee has been added');
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+        .then(() => welcome())
+}
+
 
 function updateEmployee() {
     console.log('update employee');
