@@ -10,7 +10,6 @@ db.connect(err => {
 console.log('Welcome to the Employee Tracker Application! With this app you can view and manage both your company and employee information. Answer the prompt below to get started.');
 
 function welcome() {
-    //console.log(roleTitles, employeeNames);
     inquirer
         .prompt({
             type: 'list',
@@ -38,12 +37,6 @@ function welcome() {
                 getManagerChoices();
                 addEmployee(roleTitles, managersArr);
             } else if (trackerOptions === 'Update an employee role') {
-                // employeeNames = [];
-                // getEmployeeNames();
-                // roleTitles = [];
-                // getRoleChoices();
-                // updateEmployee(employeeNames, roleTitles);
-
                 employeeNames = [];
                 getEmployeeNames()
                     .then(() => {
@@ -226,13 +219,6 @@ function getManagerChoices() {
         })
 }
 
-// function getEmployeeNames() {
-//     db.promise().query(`SELECT * FROM employees`)
-//         .then(([rows, fields]) => {
-//             createEmployeeNamesArr(rows);
-//         })
-// }
-
 function getEmployeeNames() {
     return db.promise().query(`SELECT * FROM employees`)
         .then(([rows, fields]) => {
@@ -245,7 +231,6 @@ function createRolesArr(roles) {
     roles.forEach(obj => {
         roleTitles.push(obj.title)
     })
-    //console.log(roleTitles);
 }
 
 let managersArr = ['null']
@@ -254,7 +239,6 @@ function createManagersArr(managers) {
         fullName = obj.first_name + " " + obj.last_name
         managersArr.push(fullName)
     })
-    //console.log(managersArr);
 }
 
 let employeeNames = [];
@@ -263,7 +247,6 @@ function createEmployeeNamesArr(employees) {
         let empFullName = obj.first_name + " " + obj.last_name
         employeeNames.push(empFullName)
     })
-    //console.log(employeeNames);
 }
 
 function addEmployee(roles, managers) {
@@ -310,7 +293,6 @@ function addEmployee(roles, managers) {
         ])
         .then(value => {
             getEmployeeParams(value);
-            //console.log(employeeParams);
         })
 }
 
@@ -320,7 +302,6 @@ function getEmployeeParams(value) {
     lastName = value.lastName;
     newRole = value.employeeRole;
     newManager = value.employeeManager;
-    console.log(newManager);
 
     employeeParams.push(firstName, lastName);
 
@@ -342,7 +323,6 @@ function getRoleId(roles) {
             return item
         }
     }
-    console.log(realRoleNumber);
     employeeParams.push(realRoleNumber);
 }
 
@@ -355,16 +335,13 @@ function getManagerId(managers) {
             return item
         }
     }
-    console.log(realManagerNumber);
     employeeParams.push(realManagerNumber);
-    console.log(employeeParams);
     insertEmployee(employeeParams);
 }
 function insertEmployee() {
     const sql = `INSERT INTO employees (first_name, last_name, roles_id, manager_id)
     VALUES (?,?,?,?)`
     const params = employeeParams
-    console.log(params);
 
     db.promise().query(sql, params)
         .then(() => {
