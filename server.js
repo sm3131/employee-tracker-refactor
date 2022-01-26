@@ -15,7 +15,7 @@ function welcome() {
             type: 'list',
             name: 'trackerOptions',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Leave application']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Delete Department', 'Leave application']
         })
         .then(({ trackerOptions }) => {
             if (trackerOptions === 'View all departments') {
@@ -47,7 +47,15 @@ function welcome() {
                         updateEmployee(employeeNames, roleTitles);
                     })
 
-            } else if (trackerOptions === 'Leave application') {
+            } else if (trackerOptions === 'Delete Department') {
+                departmentsInfo = [];
+                departmentArr = [];
+                findDepartments()
+                    .then(() => {
+                        whichDepartment(departmentArr);
+                    })
+            }
+            else if (trackerOptions === 'Leave application') {
                 console.log('Have a Great Day!');
                 process.exit();
             }
@@ -421,6 +429,63 @@ function updateEmployee(employeesArr, rolesArr) {
             })
             .then(() => welcome())
     }
+}
+
+let departmentsInfo = []
+function findDepartments() {
+    return db.promise().query(`SELECT * FROM departments`)
+        .then(([rows, fields]) => {
+            createDepartmentArr(rows);
+        })
+}
+
+let departmentArr = []
+function createDepartmentArr(departments) {
+    let depArr = departments.forEach(obj => {
+        departmentArr.push(obj.name);
+        departmentsInfo.push(obj);
+    })
+}
+
+function whichDepartment(departmentNames) {
+    inquirer
+        .prompt(
+            {
+                type: 'list',
+                name: 'departDelete',
+                message: 'Select which department you would like to delete from the list below.',
+                choices: departmentNames
+            }
+        )
+        .then(value => {
+            // console.log(value.departDelete);
+            let departChoice = value.departDelete
+            //console.log(departmentsInfo)
+            let departmentIdArr = departmentsInfo.filter(getDepartId);
+            let departmentId = departmentIdArr[0].id
+
+            function getDepartId(item) {
+                if (item.name === departChoice) {
+                    return item;
+                }
+            }
+            deleteDepartment(departmentId);
+        })
+}
+
+function deleteDepartment(departId) {
+    const sql = `DELETE FROM departments WHERE id = ?`;
+    const params = departId;
+    
+    db.promise().query(sql, params)
+            .then(() => {
+                console.log('Department has been deleted.');
+            })
+            .catch((err) => {
+                console.log(err.message);
+            })
+            .then(() => welcome())
+
 }
 
 welcome();
