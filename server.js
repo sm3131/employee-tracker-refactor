@@ -10,6 +10,7 @@ db.connect(err => {
 console.log('Welcome to the Employee Tracker Application! With this app you can view and manage both your company and employee information. Answer the prompt below to get started.');
 
 function welcome() {
+    //console.log(roleTitles, employeeNames);
     inquirer
         .prompt({
             type: 'list',
@@ -32,11 +33,27 @@ function welcome() {
             } else if (trackerOptions === 'Add a role') {
                 getDepartmentChoices();
             } else if (trackerOptions === 'Add an employee') {
+                roleTitles = [];
                 getRoleChoices();
                 getManagerChoices();
                 addEmployee(roleTitles, managersArr);
-            } else if (trackerOptions === 'Update an employee') {
-                updateEmployee();
+            } else if (trackerOptions === 'Update an employee role') {
+                // employeeNames = [];
+                // getEmployeeNames();
+                // roleTitles = [];
+                // getRoleChoices();
+                // updateEmployee(employeeNames, roleTitles);
+
+                employeeNames = [];
+                getEmployeeNames()
+                    .then(() => {
+                        roleTitles = [];
+                        getRoleChoices();
+                    })
+                    .then(() => {
+                        updateEmployee(employeeNames, roleTitles);
+                    })
+
             } else if (trackerOptions === 'Leave application') {
                 console.log('Have a Great Day!');
                 process.exit();
@@ -142,7 +159,11 @@ function addRole(department) {
                     let pass = !isNaN(value)
                     if (!include && pass) {
                         return true;
-                    } else {
+                    } else if (value.length > 10) {
+                        console.log("Please enter a salary value less than 10 digits! Do NOT include commas!");
+                        return false;
+                    }
+                    else {
                         console.log("Please enter a salary value! Do NOT include commas!");
                         return false;
                     }
@@ -205,6 +226,20 @@ function getManagerChoices() {
         })
 }
 
+// function getEmployeeNames() {
+//     db.promise().query(`SELECT * FROM employees`)
+//         .then(([rows, fields]) => {
+//             createEmployeeNamesArr(rows);
+//         })
+// }
+
+function getEmployeeNames() {
+    return db.promise().query(`SELECT * FROM employees`)
+        .then(([rows, fields]) => {
+            createEmployeeNamesArr(rows);
+        })
+}
+
 let roleTitles = []
 function createRolesArr(roles) {
     roles.forEach(obj => {
@@ -220,6 +255,15 @@ function createManagersArr(managers) {
         managersArr.push(fullName)
     })
     //console.log(managersArr);
+}
+
+let employeeNames = [];
+function createEmployeeNamesArr(employees) {
+    employees.forEach(obj => {
+        let empFullName = obj.first_name + " " + obj.last_name
+        employeeNames.push(empFullName)
+    })
+    //console.log(employeeNames);
 }
 
 function addEmployee(roles, managers) {
@@ -254,7 +298,7 @@ function addEmployee(roles, managers) {
             {
                 type: 'list',
                 name: 'employeeRole',
-                message: "Please select the employee's this role from the list of options below.",
+                message: "Please select the employee's role from the list of options below.",
                 choices: roles
             },
             {
@@ -280,19 +324,13 @@ function getEmployeeParams(value) {
 
     employeeParams.push(firstName, lastName);
 
-    db.query(`SELECT * FROM roles`, function(err, results) {
-       //let roleId = 
-       getRoleId(results);
-       //employeeParams.push(roleId);
-       //console.log(employeeParams);
+    db.query(`SELECT * FROM roles`, function (err, results) {
+        getRoleId(results);
     })
 
-    db.query(`SELECT * FROM employees`, function(err, results) {
-        //let managerId = 
+    db.query(`SELECT * FROM employees`, function (err, results) {
         getManagerId(results);
-        //employeeParams.push(managerId);
-        //console.log(employeeParams);
-     }) 
+    })
 }
 
 function getRoleId(roles) {
@@ -300,7 +338,7 @@ function getRoleId(roles) {
     let roleNumber = rolesArr.filter(getRealRoleId)
     let realRoleNumber = roleNumber[0].id
     function getRealRoleId(item) {
-        if(item.title === newRole) {
+        if (item.title === newRole) {
             return item
         }
     }
@@ -313,7 +351,7 @@ function getManagerId(managers) {
     let managerNumber = managerArr.filter(getRealManagerId)
     let realManagerNumber = managerNumber[0].id
     function getRealManagerId(item) {
-        if(item.first_name + " " + item.last_name === newManager) {
+        if (item.first_name + " " + item.last_name === newManager) {
             return item
         }
     }
@@ -327,10 +365,11 @@ function insertEmployee() {
     VALUES (?,?,?,?)`
     const params = employeeParams
     console.log(params);
-    
+
     db.promise().query(sql, params)
         .then(() => {
             console.log('Employee has been added');
+            employeeParams = [];
         })
         .catch((err) => {
             console.log(err.message);
@@ -338,10 +377,73 @@ function insertEmployee() {
         .then(() => welcome())
 }
 
+function updateEmployee(employeesArr, rolesArr) {
+    inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'employee',
+                message: 'Select an employee from the list below to update their role.',
+                choices: employeesArr
+            },
+            {
+                type: 'list',
+                name: 'newRole',
+                message: "Please select the employee's new role from the list of roles below.",
+                choices: rolesArr
+            }
+        ])
+        .then(value => {
+            let employeeChoice = value.employee;
+            let roleChoice = value.newRole;
+            let updateParams = [];
 
-function updateEmployee() {
-    console.log('update employee');
-    welcome();
+            db.query(`SELECT * FROM roles`, function (err, results) {
+                getRoleInfo(results);
+            })
+
+            function getRoleInfo(rolesArr) {
+                let roleIdArr = rolesArr.filter(getRoleId);
+                let roleId = roleIdArr[0].id;
+                function getRoleId(item) {
+                    if (item.title === roleChoice) {
+                        return item
+                    }
+                }
+                updateParams.push(roleId);
+            }
+
+            db.query(`SELECT * FROM employees`, function (err, results) {
+                getEmployeeInfo(results)
+            })
+
+            function getEmployeeInfo(employeesArr) {
+                let employeeIdArr = employeesArr.filter(getEmployeeId);
+                let employeeId = employeeIdArr[0].id;
+                function getEmployeeId(item) {
+                    if (item.first_name + " " + item.last_name === employeeChoice) {
+                        return item
+                    }
+                }
+                updateParams.push(employeeId);
+                insertUpdatedEmployee(updateParams);
+            }
+        })
+
+    function insertUpdatedEmployee(empParams) {
+        const sql = `UPDATE employees SET roles_id = ? WHERE id = ?`;
+        const params = empParams;
+
+        db.promise().query(sql, params)
+            .then(() => {
+                console.log('Employee role has been updated.');
+                employeeParams = [];
+            })
+            .catch((err) => {
+                console.log(err.message);
+            })
+            .then(() => welcome())
+    }
 }
 
 welcome();
