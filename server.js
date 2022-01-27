@@ -1,6 +1,9 @@
 const db = require('./db/connection');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
+const { viewDepartments } = require('./SQL-queries/departments')
+const { viewRoles } = require('./SQL-queries/roles')
+const { viewEmployees } = require('./SQL-queries/employees')
 
 // Connect to database
 db.connect(err => {
@@ -19,11 +22,14 @@ function welcome() {
         })
         .then(({ trackerOptions }) => {
             if (trackerOptions === 'View all departments') {
-                viewDepartments();
+                viewDepartments()
+                .then(() => welcome())
             } else if (trackerOptions === 'View all roles') {
-                viewRoles();
+                viewRoles()
+                .then(() => welcome())
             } else if (trackerOptions === 'View all employees') {
-                viewEmployees();
+                viewEmployees()
+                .then(() => welcome())
             } else if (trackerOptions === 'Add a department') {
                 addDepartment().then(value => {
                     const departmentName = value.department
@@ -62,46 +68,46 @@ function welcome() {
         })
 }
 
-function viewDepartments() {
-    db.promise().query(`SELECT * FROM departments`)
-        .then(([rows, fields]) => {
-            console.table(rows)
-        })
-        .catch((err) => {
-            console.log(err.message);
-        })
-        .then(() => welcome())
-}
+// function viewDepartments() {
+//     db.promise().query(`SELECT * FROM departments`)
+//         .then(([rows, fields]) => {
+//             console.table(rows)
+//         })
+//         .catch((err) => {
+//             console.log(err.message);
+//         })
+//         .then(() => welcome())
+// }
 
-function viewRoles() {
-    db.promise().query(
-        `SELECT roles.id, roles.title AS job_title, roles.salary, departments.name AS department_name
-    FROM roles
-    LEFT JOIN departments ON roles.departments_id = departments.id`)
-        .then(([rows, fields]) => {
-            console.table(rows)
-        })
-        .catch((err) => {
-            console.log(err.message);
-        })
-        .then(() => welcome())
-}
+// function viewRoles() {
+//     db.promise().query(
+//         `SELECT roles.id, roles.title AS job_title, roles.salary, departments.name AS department_name
+//     FROM roles
+//     LEFT JOIN departments ON roles.departments_id = departments.id`)
+//         .then(([rows, fields]) => {
+//             console.table(rows)
+//         })
+//         .catch((err) => {
+//             console.log(err.message);
+//         })
+//         .then(() => welcome())
+// }
 
-function viewEmployees() {
-    db.promise().query(
-        `SELECT employees.id, employees.first_name AS employee_first, employees.last_name AS employee_last, managers.first_name AS manager_first, managers.last_name AS manager_last, roles.title AS job_title, roles.salary, departments.name AS department_name  
-    FROM employees 
-    LEFT JOIN employees AS managers ON employees.manager_id = managers.id
-    LEFT JOIN roles ON employees.roles_id = roles.id
-    LEFT JOIN departments ON roles.departments_id = departments.id`)
-        .then(([rows, fields]) => {
-            console.table(rows)
-        })
-        .catch((err) => {
-            console.log(err.message);
-        })
-        .then(() => welcome())
-}
+// function viewEmployees() {
+//     db.promise().query(
+//         `SELECT employees.id, employees.first_name AS employee_first, employees.last_name AS employee_last, managers.first_name AS manager_first, managers.last_name AS manager_last, roles.title AS job_title, roles.salary, departments.name AS department_name  
+//     FROM employees 
+//     LEFT JOIN employees AS managers ON employees.manager_id = managers.id
+//     LEFT JOIN roles ON employees.roles_id = roles.id
+//     LEFT JOIN departments ON roles.departments_id = departments.id`)
+//         .then(([rows, fields]) => {
+//             console.table(rows)
+//         })
+//         .catch((err) => {
+//             console.log(err.message);
+//         })
+//         .then(() => welcome())
+// }
 
 function addDepartment() {
     return inquirer
