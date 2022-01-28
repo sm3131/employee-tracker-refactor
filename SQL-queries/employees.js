@@ -14,7 +14,6 @@ function viewEmployees() {
         .catch((err) => {
             console.log(err.message);
         })
-        //.then(() => welcome())
 }
 
 module.exports = { viewEmployees }

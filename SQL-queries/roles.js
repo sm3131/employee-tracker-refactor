@@ -1,4 +1,5 @@
 const db = require('../db/connection');
+const inquirer = require('inquirer');
 
 //Function to view all roles
 function viewRoles() {
@@ -12,7 +13,66 @@ function viewRoles() {
         .catch((err) => {
             console.log(err.message);
         })
-        //.then(() => welcome())
 }
 
-module.exports = { viewRoles};
+function addRole(departments) {
+    return inquirer
+        .prompt([
+            {
+                type: 'input',
+                name: 'roleName',
+                message: 'Please enter the name of the role you would like to add.',
+                validate: value => {
+                    if (value) {
+                        return true;
+                    } else {
+                        console.log("Please enter a role name!");
+                        return false;
+                    }
+                }
+            },
+            {
+                type: 'input',
+                name: 'roleSalary',
+                message: 'Please enter the salary for the role you are adding.',
+                validate: value => {
+                    let include = value.includes(",");
+                    let pass = !isNaN(value)
+                    if (!include && pass) {
+                        return true;
+                    } else if (value.length > 10) {
+                        console.log("Please enter a salary value less than 10 digits! Do NOT include commas!");
+                        return false;
+                    }
+                    else {
+                        console.log("Please enter a salary value! Do NOT include commas!");
+                        return false;
+                    }
+                }
+            },
+            {
+                type: 'list',
+                name: 'roleDepartment',
+                message: 'Please select the department this role belongs to from the list of options below.',
+                choices: departments
+            }
+        ])
+}
+
+function insertRole(role, salary, departId) {
+    const sql = `INSERT INTO roles (title, salary, departments_id)
+    VALUES (?,?,?)`
+    const params = [role, salary, departId]
+
+    console.log(params);
+    
+    return db.promise().query(sql, params)
+        .then(() => {
+            console.log('Role has been added');
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+        //.then(() => welcome())
+}
+module.exports = { viewRoles, addRole, insertRole };

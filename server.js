@@ -1,8 +1,8 @@
 const db = require('./db/connection');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
-const { viewDepartments } = require('./SQL-queries/departments')
-const { viewRoles } = require('./SQL-queries/roles')
+const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId } = require('./SQL-queries/departments')
+const { viewRoles, addRole, insertRole } = require('./SQL-queries/roles')
 const { viewEmployees } = require('./SQL-queries/employees')
 
 // Connect to database
@@ -31,12 +31,33 @@ function welcome() {
                 viewEmployees()
                 .then(() => welcome())
             } else if (trackerOptions === 'Add a department') {
-                addDepartment().then(value => {
+                addDepartment()
+                .then(value => {
                     const departmentName = value.department
                     insertDepartment(departmentName)
+                    .then(() => welcome())
                 })
             } else if (trackerOptions === 'Add a role') {
-                getDepartmentChoices();
+                getDepartmentChoices()
+                .then(departments => addRole(departments)
+                .then(newRole => 
+                    {
+                        console.log(newRole)
+                
+                        let role = newRole.roleName;
+                        let salary = newRole.roleSalary;
+                        let roleDepart = newRole.roleDepartment;
+                        let departmentId = getDepartmentId(roleDepart)
+                        
+
+                        console.log(role, salary, departmentId)
+            
+                        insertRole(role, salary, departmentId)
+                        .then(() => welcome())
+                    }
+                ))
+              
+
             } else if (trackerOptions === 'Add an employee') {
                 roleTitles = [];
                 getRoleChoices();
@@ -68,156 +89,83 @@ function welcome() {
         })
 }
 
-// function viewDepartments() {
+// function addRole(department) {
+//     inquirer
+//         .prompt([
+//             {
+//                 type: 'input',
+//                 name: 'roleName',
+//                 message: 'Please enter the name of the role you would like to add.',
+//                 validate: value => {
+//                     if (value) {
+//                         return true;
+//                     } else {
+//                         console.log("Please enter a role name!");
+//                         return false;
+//                     }
+//                 }
+//             },
+//             {
+//                 type: 'input',
+//                 name: 'roleSalary',
+//                 message: 'Please enter the salary for the role you are adding.',
+//                 validate: value => {
+//                     let include = value.includes(",");
+//                     let pass = !isNaN(value)
+//                     if (!include && pass) {
+//                         return true;
+//                     } else if (value.length > 10) {
+//                         console.log("Please enter a salary value less than 10 digits! Do NOT include commas!");
+//                         return false;
+//                     }
+//                     else {
+//                         console.log("Please enter a salary value! Do NOT include commas!");
+//                         return false;
+//                     }
+//                 }
+//             },
+//             {
+//                 type: 'list',
+//                 name: 'roleDepartment',
+//                 message: 'Please select the department this role belongs to from the list of options below.',
+//                 choices: department
+//             }
+//         ])
+//         .then(value => {
+//             let role = value.roleName;
+//             let salary = value.roleSalary;
+//             let roleDepart = value.roleDepartment;
+
+//             let departIdArr = department.filter(getId)
+//             let departId = departIdArr[0].id
+
+//             function getId(item) {
+//                 if (item.name === roleDepart) {
+//                     return item.id
+//                 }
+//             }
+
+//             const sql = `INSERT INTO roles (title, salary, departments_id)
+//             VALUES (?,?,?)`
+//             const params = [role, salary, departId]
+
+//             db.promise().query(sql, params)
+//                 .then(() => {
+//                     console.log('Role has been added');
+//                 })
+//                 .catch((err) => {
+//                     console.log(err.message);
+//                 })
+//                 .then(() => welcome())
+//         })
+// }
+
+// function getDepartmentChoices() {
 //     db.promise().query(`SELECT * FROM departments`)
 //         .then(([rows, fields]) => {
-//             console.table(rows)
+//             addRole(rows);
 //         })
-//         .catch((err) => {
-//             console.log(err.message);
-//         })
-//         .then(() => welcome())
 // }
-
-// function viewRoles() {
-//     db.promise().query(
-//         `SELECT roles.id, roles.title AS job_title, roles.salary, departments.name AS department_name
-//     FROM roles
-//     LEFT JOIN departments ON roles.departments_id = departments.id`)
-//         .then(([rows, fields]) => {
-//             console.table(rows)
-//         })
-//         .catch((err) => {
-//             console.log(err.message);
-//         })
-//         .then(() => welcome())
-// }
-
-// function viewEmployees() {
-//     db.promise().query(
-//         `SELECT employees.id, employees.first_name AS employee_first, employees.last_name AS employee_last, managers.first_name AS manager_first, managers.last_name AS manager_last, roles.title AS job_title, roles.salary, departments.name AS department_name  
-//     FROM employees 
-//     LEFT JOIN employees AS managers ON employees.manager_id = managers.id
-//     LEFT JOIN roles ON employees.roles_id = roles.id
-//     LEFT JOIN departments ON roles.departments_id = departments.id`)
-//         .then(([rows, fields]) => {
-//             console.table(rows)
-//         })
-//         .catch((err) => {
-//             console.log(err.message);
-//         })
-//         .then(() => welcome())
-// }
-
-function addDepartment() {
-    return inquirer
-        .prompt(
-            {
-                type: 'input',
-                name: 'department',
-                message: 'Please enter the name of the department you would like to add.',
-                validate: value => {
-                    if (value) {
-                        return true;
-                    } else {
-                        console.log("Please enter a department name!");
-                        return false;
-                    }
-                }
-            })
-}
-
-function insertDepartment(department) {
-    const sql = `INSERT INTO departments (name) VALUES (?)`;
-    const param = [department];
-
-    db.promise().query(sql, param)
-        .then(() => {
-            console.log('Department has been added');
-        })
-        .catch((err) => {
-            console.log(err.message);
-        })
-        .then(() => welcome())
-}
-
-function addRole(department) {
-    inquirer
-        .prompt([
-            {
-                type: 'input',
-                name: 'roleName',
-                message: 'Please enter the name of the role you would like to add.',
-                validate: value => {
-                    if (value) {
-                        return true;
-                    } else {
-                        console.log("Please enter a role name!");
-                        return false;
-                    }
-                }
-            },
-            {
-                type: 'input',
-                name: 'roleSalary',
-                message: 'Please enter the salary for the role you are adding.',
-                validate: value => {
-                    let include = value.includes(",");
-                    let pass = !isNaN(value)
-                    if (!include && pass) {
-                        return true;
-                    } else if (value.length > 10) {
-                        console.log("Please enter a salary value less than 10 digits! Do NOT include commas!");
-                        return false;
-                    }
-                    else {
-                        console.log("Please enter a salary value! Do NOT include commas!");
-                        return false;
-                    }
-                }
-            },
-            {
-                type: 'list',
-                name: 'roleDepartment',
-                message: 'Please select the department this role belongs to from the list of options below.',
-                choices: department
-            }
-        ])
-        .then(value => {
-            let role = value.roleName;
-            let salary = value.roleSalary;
-            let roleDepart = value.roleDepartment;
-
-            let departIdArr = department.filter(getId)
-            let departId = departIdArr[0].id
-
-            function getId(item) {
-                if (item.name === roleDepart) {
-                    return item.id
-                }
-            }
-
-            const sql = `INSERT INTO roles (title, salary, departments_id)
-            VALUES (?,?,?)`
-            const params = [role, salary, departId]
-
-            db.promise().query(sql, params)
-                .then(() => {
-                    console.log('Role has been added');
-                })
-                .catch((err) => {
-                    console.log(err.message);
-                })
-                .then(() => welcome())
-        })
-}
-
-function getDepartmentChoices() {
-    db.promise().query(`SELECT * FROM departments`)
-        .then(([rows, fields]) => {
-            addRole(rows);
-        })
-}
 
 function getRoleChoices() {
     db.promise().query(`SELECT * FROM roles`)
