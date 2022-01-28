@@ -77,15 +77,24 @@ function insertRole(role, salary, departId) {
     //.then(() => welcome())
 }
 
+//Function to get role choices
+function getRoleTitles() {
+    return db.promise().query(`SELECT title FROM roles`)
+        .then(([rows, fields]) => {
+            //console.log(rows);
+            return rows
+        })
+}
+
 //Function to get role id
-getId = function (name) {
-    const sql = `SELECT id FROM roles WHERE name = ?`
+function getRoleId(name) {
+    const sql = `SELECT id FROM roles WHERE title = ?`
     const params = [name]
     return db.promise().query(sql, params)
         .then(([rows, fields]) => {
-            console.log(rows)
+            //console.log(rows)
             return rows[0].id;
         })
 }
 
-module.exports = { viewRoles, addRole, insertRole };
+module.exports = { viewRoles, addRole, insertRole, getRoleTitles, getRoleId };

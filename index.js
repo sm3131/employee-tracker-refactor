@@ -3,10 +3,8 @@ const inquirer = require('inquirer');
 const cTable = require('console.table');
 
 const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId } = require('./SQL-queries/departments')
-const { viewRoles, addRole, insertRole } = require('./SQL-queries/roles')
-const { viewEmployees } = require('./SQL-queries/employees')
-const Department = require('./lib/Department')
-const Role = require('./lib/Role')
+const { viewRoles, addRole, insertRole, getRoleTitles, getRoleId } = require('./SQL-queries/roles')
+const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId } = require('./SQL-queries/employees')
 
 // Connect to database
 db.connect(err => {
@@ -49,19 +47,32 @@ function welcome() {
                             let roleDepart = newRole.roleDepartment;
 
                             getDepartmentId(roleDepart)
-                            .then(id => {
-                                let departId = id
+                                .then(id => {
+                                    let departId = id
 
-                                insertRole(role, salary, departId)
-                                .then(()=> welcome()) 
-                            }) 
+                                    insertRole(role, salary, departId)
+                                        .then(() => welcome())
+                                })
                         }
                         ))
             } else if (trackerOptions === 'Add an employee') {
-                roleTitles = [];
-                getRoleChoices();
-                getManagerChoices();
-                addEmployee(roleTitles, managersArr);
+                roleTitles = []
+                managersArr = ['null']
+                getRoleTitles()
+                    .then(roles => {
+                        createRolesArr(roles)
+                        //console.log(roleTitles);
+                    })
+                getEmployeeNames()
+                    .then(names => {
+                        createManagersArr(names)
+                        //console.log(managersArr)
+                    })
+                addEmployee(roleTitles, managersArr)
+                    .then(value => {
+                        //console.log(value);
+                        getEmployeeParams(value);
+                    })
             } else if (trackerOptions === 'Update an employee role') {
                 employeeNames = [];
                 getEmployeeNames()
@@ -88,26 +99,12 @@ function welcome() {
         })
 }
 
-function getRoleChoices() {
-    db.promise().query(`SELECT * FROM roles`)
-        .then(([rows, fields]) => {
-            createRolesArr(rows);
-        })
-}
-
-function getManagerChoices() {
-    db.promise().query(`SELECT * FROM employees`)
-        .then(([rows, fields]) => {
-            createManagersArr(rows);
-        })
-}
-
-function getEmployeeNames() {
-    return db.promise().query(`SELECT * FROM employees`)
-        .then(([rows, fields]) => {
-            createEmployeeNamesArr(rows);
-        })
-}
+// function getEmployeeNames() {
+//     return db.promise().query(`SELECT * FROM employees`)
+//         .then(([rows, fields]) => {
+//             createEmployeeNamesArr(rows);
+//         })
+// }
 
 let roleTitles = []
 function createRolesArr(roles) {
@@ -124,103 +121,43 @@ function createManagersArr(managers) {
     })
 }
 
-let employeeNames = [];
-function createEmployeeNamesArr(employees) {
-    employees.forEach(obj => {
-        let empFullName = obj.first_name + " " + obj.last_name
-        employeeNames.push(empFullName)
-    })
-}
-
-function addEmployee(roles, managers) {
-    inquirer
-        .prompt([
-            {
-                type: 'input',
-                name: 'firstName',
-                message: "Please enter the employee's first name",
-                validate: value => {
-                    if (value) {
-                        return true;
-                    } else {
-                        console.log("Please enter the employee's first name!");
-                        return false;
-                    }
-                }
-            },
-            {
-                type: 'input',
-                name: 'lastName',
-                message: "Please enter the employee's last name",
-                validate: value => {
-                    if (value) {
-                        return true;
-                    } else {
-                        console.log("Please enter the employee's last name!");
-                        return false;
-                    }
-                }
-            },
-            {
-                type: 'list',
-                name: 'employeeRole',
-                message: "Please select the employee's role from the list of options below.",
-                choices: roles
-            },
-            {
-                type: 'list',
-                name: 'employeeManager',
-                message: "Please select the employee's manager from the list of options below, or select null if this does not apply.",
-                choices: managers
-            }
-        ])
-        .then(value => {
-            getEmployeeParams(value);
-        })
-}
+// let employeeNames = [];
+// function createEmployeeNamesArr(employees) {
+//     employees.forEach(obj => {
+//         let empFullName = obj.first_name + " " + obj.last_name
+//         employeeNames.push(empFullName)
+//     })
+// }
 
 let employeeParams = []
 function getEmployeeParams(value) {
-    firstName = value.firstName;
-    lastName = value.lastName;
-    newRole = value.employeeRole;
-    newManager = value.employeeManager;
+    let firstName = value.firstName;
+    let lastName = value.lastName;
+    let role = value.employeeRole;
+    //manager = value.employeeManager;
+    let managerName = value.employeeManager
+    let managerArr = managerName.split(" ");
+    let managerFirst = managerArr[0]
+    let managerLast = managerArr[1];
 
-    employeeParams.push(firstName, lastName);
+    employeeParams.push(firstName, lastName)
 
-    db.query(`SELECT * FROM roles`, function (err, results) {
-        getRoleId(results);
-    })
-
-    db.query(`SELECT * FROM employees`, function (err, results) {
-        getManagerId(results);
-    })
+    getRoleId(role)
+        .then(id => {
+            let roleId = id;
+            employeeParams.push(roleId);
+            //console.log(employeeParams);
+        })
+    
+    getEmployeeId(managerFirst, managerLast)
+        .then(manId => {
+           let managerId = manId;
+           employeeParams.push(managerId);
+           //console.log(employeeParams);
+           insertEmployee(employeeParams);
+        })
 }
 
-function getRoleId(roles) {
-    let rolesArr = roles;
-    let roleNumber = rolesArr.filter(getRealRoleId)
-    let realRoleNumber = roleNumber[0].id
-    function getRealRoleId(item) {
-        if (item.title === newRole) {
-            return item
-        }
-    }
-    employeeParams.push(realRoleNumber);
-}
-
-function getManagerId(managers) {
-    let managerArr = managers;
-    let managerNumber = managerArr.filter(getRealManagerId)
-    let realManagerNumber = managerNumber[0].id
-    function getRealManagerId(item) {
-        if (item.first_name + " " + item.last_name === newManager) {
-            return item
-        }
-    }
-    employeeParams.push(realManagerNumber);
-    insertEmployee(employeeParams);
-}
 function insertEmployee() {
     const sql = `INSERT INTO employees (first_name, last_name, roles_id, manager_id)
     VALUES (?,?,?,?)`
