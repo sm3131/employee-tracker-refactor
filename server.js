@@ -4,7 +4,7 @@ const cTable = require('console.table');
 const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId } = require('./SQL-queries/departments')
 const { viewRoles, addRole, insertRole } = require('./SQL-queries/roles')
 const { viewEmployees } = require('./SQL-queries/employees')
-
+const Department = require('./lib/Department')
 // Connect to database
 db.connect(err => {
     if (err) throw err;
@@ -23,40 +23,41 @@ function welcome() {
         .then(({ trackerOptions }) => {
             if (trackerOptions === 'View all departments') {
                 viewDepartments()
-                .then(() => welcome())
+                    .then(() => welcome())
             } else if (trackerOptions === 'View all roles') {
                 viewRoles()
-                .then(() => welcome())
+                    .then(() => welcome())
             } else if (trackerOptions === 'View all employees') {
                 viewEmployees()
-                .then(() => welcome())
+                    .then(() => welcome())
             } else if (trackerOptions === 'Add a department') {
                 addDepartment()
-                .then(value => {
-                    const departmentName = value.department
-                    insertDepartment(departmentName)
-                    .then(() => welcome())
-                })
+                    .then(value => {
+                        const departmentName = value.department
+                        insertDepartment(departmentName)
+                            .then(() => welcome())
+                    })
             } else if (trackerOptions === 'Add a role') {
                 getDepartmentChoices()
-                .then(departments => addRole(departments)
-                .then(newRole => 
-                    {
-                        console.log(newRole)
-                
-                        let role = newRole.roleName;
-                        let salary = newRole.roleSalary;
-                        let roleDepart = newRole.roleDepartment;
-                        let departmentId = getDepartmentId(roleDepart)
-                        
+                    .then(departments => addRole(departments)
+                        .then(newRole => {
+                            let role = newRole.roleName;
+                            let salary = newRole.roleSalary;
+                            let roleDepart = newRole.roleDepartment;
 
-                        console.log(role, salary, departmentId)
-            
-                        insertRole(role, salary, departmentId)
-                        .then(() => welcome())
-                    }
-                ))
-              
+                            let depart = new Department
+                            depart.getId(roleDepart)
+                                .then(id => {
+                                    let departId = id
+                                    //console.log(departId);
+                                    //console.log(role, salary, departId);
+
+                                    insertRole(role, salary, departId)
+                                    .then(()=> welcome()) 
+                                }) 
+                        }
+                        ))
+
 
             } else if (trackerOptions === 'Add an employee') {
                 roleTitles = [];
@@ -430,15 +431,15 @@ function whichDepartment(departmentNames) {
 function deleteDepartment(departId) {
     const sql = `DELETE FROM departments WHERE id = ?`;
     const params = departId;
-    
+
     db.promise().query(sql, params)
-            .then(() => {
-                console.log('Department has been deleted.');
-            })
-            .catch((err) => {
-                console.log(err.message);
-            })
-            .then(() => welcome())
+        .then(() => {
+            console.log('Department has been deleted.');
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+        .then(() => welcome())
 
 }
 
