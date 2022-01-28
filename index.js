@@ -57,7 +57,7 @@ function welcome() {
                         ))
             } else if (trackerOptions === 'Add an employee') {
                 roleTitles = []
-                managersArr = ['null']
+                namesArr = ['null']
                 getRoleTitles()
                     .then(roles => {
                         createRolesArr(roles)
@@ -65,24 +65,31 @@ function welcome() {
                     })
                 getEmployeeNames()
                     .then(names => {
-                        createManagersArr(names)
+                        createNamesArr(names);
+                        //createManagersArr(names)
                         //console.log(managersArr)
                     })
-                addEmployee(roleTitles, managersArr)
+                addEmployee(roleTitles, namesArr)
                     .then(value => {
                         //console.log(value);
                         getEmployeeParams(value);
                     })
             } else if (trackerOptions === 'Update an employee role') {
-                employeeNames = [];
+                namesArr = ['null'];
                 getEmployeeNames()
-                    .then(() => {
-                        roleTitles = [];
-                        getRoleChoices();
+                    .then(names => {
+                        createNamesArr(names)
+                        console.log(namesArr)
                     })
-                    .then(() => {
-                        updateEmployee(employeeNames, roleTitles);
+                getRoleTitles()
+                    .then(roles => {
+                        createRolesArr(roles)
+                        console.log(roleTitles);
                     })
+
+                // .then(() => {
+                //     updateEmployee(employeeNames, roleTitles);
+                // })
 
             } else if (trackerOptions === 'Delete Department') {
                 departmentsInfo = [];
@@ -99,13 +106,6 @@ function welcome() {
         })
 }
 
-// function getEmployeeNames() {
-//     return db.promise().query(`SELECT * FROM employees`)
-//         .then(([rows, fields]) => {
-//             createEmployeeNamesArr(rows);
-//         })
-// }
-
 let roleTitles = []
 function createRolesArr(roles) {
     roles.forEach(obj => {
@@ -113,54 +113,73 @@ function createRolesArr(roles) {
     })
 }
 
-let managersArr = ['null']
-function createManagersArr(managers) {
-    managers.forEach(obj => {
+let namesArr = ['null']
+function createNamesArr(names) {
+    names.forEach(obj => {
         fullName = obj.first_name + " " + obj.last_name
-        managersArr.push(fullName)
+        namesArr.push(fullName)
     })
 }
-
-// let employeeNames = [];
-// function createEmployeeNamesArr(employees) {
-//     employees.forEach(obj => {
-//         let empFullName = obj.first_name + " " + obj.last_name
-//         employeeNames.push(empFullName)
-//     })
-// }
 
 let employeeParams = []
 function getEmployeeParams(value) {
     let firstName = value.firstName;
     let lastName = value.lastName;
     let role = value.employeeRole;
-    //manager = value.employeeManager;
-    let managerName = value.employeeManager
-    let managerArr = managerName.split(" ");
-    let managerFirst = managerArr[0]
-    let managerLast = managerArr[1];
 
     employeeParams.push(firstName, lastName)
 
-    getRoleId(role)
-        .then(id => {
-            let roleId = id;
-            employeeParams.push(roleId);
-            //console.log(employeeParams);
-        })
-    
-    getEmployeeId(managerFirst, managerLast)
-        .then(manId => {
-           let managerId = manId;
-           employeeParams.push(managerId);
-           //console.log(employeeParams);
-           insertEmployee(employeeParams);
-        })
+    if (!value.employeeManager === 'null') {
+        let managerName = value.employeeManager
+        let managerArr = managerName.split(" ");
+        let managerFirst = managerArr[0]
+        let managerLast = managerArr[1];
+
+        getRoleId(role)
+            .then(id => {
+                let roleId = id;
+                employeeParams.push(roleId);
+                //console.log(employeeParams);
+            })
+
+        getEmployeeId(managerFirst, managerLast)
+            .then(manId => {
+                let managerId = manId;
+                employeeParams.push(managerId);
+                //console.log(employeeParams);
+                insertEmployee(employeeParams);
+            })
+    } else {
+        getRoleId(role)
+            .then(id => {
+                let roleId = id;
+                employeeParams.push(roleId);
+                //console.log(employeeParams);
+                insertEmployeeNoManager(employeeParams);
+            })
+    }
 }
 
-function insertEmployee() {
+function insertEmployee(employeeParams) {
     const sql = `INSERT INTO employees (first_name, last_name, roles_id, manager_id)
     VALUES (?,?,?,?)`
+    const params = employeeParams
+
+    db.promise().query(sql, params)
+        .then(() => {
+            console.log('Employee has been added');
+            employeeParams = [];
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+        .then(() => welcome())
+}
+
+function insertEmployeeNoManager(employeeParams) {
+    console.log(employeeParams);
+    const sql = `INSERT INTO employees (first_name, last_name, roles_id)
+    VALUES (?,?,?)`
     const params = employeeParams
 
     db.promise().query(sql, params)

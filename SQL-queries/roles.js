@@ -65,8 +65,6 @@ function insertRole(role, salary, departId) {
     VALUES (?,?,?)`
     const params = [role, salary, departId]
 
-    console.log(params);
-
     return db.promise().query(sql, params)
         .then(() => {
             console.log('Role has been added');
@@ -74,7 +72,6 @@ function insertRole(role, salary, departId) {
         .catch((err) => {
             console.log(err.message);
         })
-    //.then(() => welcome())
 }
 
 //Function to get role choices
