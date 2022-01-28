@@ -1,10 +1,13 @@
 const db = require('./db/connection');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
+
 const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId } = require('./SQL-queries/departments')
 const { viewRoles, addRole, insertRole } = require('./SQL-queries/roles')
 const { viewEmployees } = require('./SQL-queries/employees')
 const Department = require('./lib/Department')
+const Role = require('./lib/Role')
+
 // Connect to database
 db.connect(err => {
     if (err) throw err;
@@ -45,20 +48,15 @@ function welcome() {
                             let salary = newRole.roleSalary;
                             let roleDepart = newRole.roleDepartment;
 
-                            let depart = new Department
-                            depart.getId(roleDepart)
-                                .then(id => {
-                                    let departId = id
-                                    //console.log(departId);
-                                    //console.log(role, salary, departId);
+                            getDepartmentId(roleDepart)
+                            .then(id => {
+                                let departId = id
 
-                                    insertRole(role, salary, departId)
-                                    .then(()=> welcome()) 
-                                }) 
+                                insertRole(role, salary, departId)
+                                .then(()=> welcome()) 
+                            }) 
                         }
                         ))
-
-
             } else if (trackerOptions === 'Add an employee') {
                 roleTitles = [];
                 getRoleChoices();
@@ -89,84 +87,6 @@ function welcome() {
             }
         })
 }
-
-// function addRole(department) {
-//     inquirer
-//         .prompt([
-//             {
-//                 type: 'input',
-//                 name: 'roleName',
-//                 message: 'Please enter the name of the role you would like to add.',
-//                 validate: value => {
-//                     if (value) {
-//                         return true;
-//                     } else {
-//                         console.log("Please enter a role name!");
-//                         return false;
-//                     }
-//                 }
-//             },
-//             {
-//                 type: 'input',
-//                 name: 'roleSalary',
-//                 message: 'Please enter the salary for the role you are adding.',
-//                 validate: value => {
-//                     let include = value.includes(",");
-//                     let pass = !isNaN(value)
-//                     if (!include && pass) {
-//                         return true;
-//                     } else if (value.length > 10) {
-//                         console.log("Please enter a salary value less than 10 digits! Do NOT include commas!");
-//                         return false;
-//                     }
-//                     else {
-//                         console.log("Please enter a salary value! Do NOT include commas!");
-//                         return false;
-//                     }
-//                 }
-//             },
-//             {
-//                 type: 'list',
-//                 name: 'roleDepartment',
-//                 message: 'Please select the department this role belongs to from the list of options below.',
-//                 choices: department
-//             }
-//         ])
-//         .then(value => {
-//             let role = value.roleName;
-//             let salary = value.roleSalary;
-//             let roleDepart = value.roleDepartment;
-
-//             let departIdArr = department.filter(getId)
-//             let departId = departIdArr[0].id
-
-//             function getId(item) {
-//                 if (item.name === roleDepart) {
-//                     return item.id
-//                 }
-//             }
-
-//             const sql = `INSERT INTO roles (title, salary, departments_id)
-//             VALUES (?,?,?)`
-//             const params = [role, salary, departId]
-
-//             db.promise().query(sql, params)
-//                 .then(() => {
-//                     console.log('Role has been added');
-//                 })
-//                 .catch((err) => {
-//                     console.log(err.message);
-//                 })
-//                 .then(() => welcome())
-//         })
-// }
-
-// function getDepartmentChoices() {
-//     db.promise().query(`SELECT * FROM departments`)
-//         .then(([rows, fields]) => {
-//             addRole(rows);
-//         })
-// }
 
 function getRoleChoices() {
     db.promise().query(`SELECT * FROM roles`)

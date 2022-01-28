@@ -59,13 +59,14 @@ function addRole(departments) {
         ])
 }
 
+//Function to insert new role
 function insertRole(role, salary, departId) {
     const sql = `INSERT INTO roles (title, salary, departments_id)
     VALUES (?,?,?)`
     const params = [role, salary, departId]
 
     console.log(params);
-    
+
     return db.promise().query(sql, params)
         .then(() => {
             console.log('Role has been added');
@@ -73,6 +74,18 @@ function insertRole(role, salary, departId) {
         .catch((err) => {
             console.log(err.message);
         })
-        //.then(() => welcome())
+    //.then(() => welcome())
 }
+
+//Function to get role id
+getId = function (name) {
+    const sql = `SELECT id FROM roles WHERE name = ?`
+    const params = [name]
+    return db.promise().query(sql, params)
+        .then(([rows, fields]) => {
+            console.log(rows)
+            return rows[0].id;
+        })
+}
+
 module.exports = { viewRoles, addRole, insertRole };

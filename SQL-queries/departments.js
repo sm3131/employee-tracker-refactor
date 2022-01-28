@@ -51,21 +51,15 @@ function getDepartmentChoices() {
         })
 }
 
-//Function to get department IDs
-function getDepartmentId(departmentChoice) {
-    getDepartmentChoices()
-        .then(choices => {
-            let departArr = choices;
-            let departIdArr = departArr.filter(getId)
-            let departId = departIdArr[0].id
-
-            function getId(item) {
-                if (item.name === departmentChoice) {
-                    return item.id
-                }
-            }
-            return departId
+//Function to get department id
+function getDepartmentId(name) {
+    const sql = `SELECT id FROM departments WHERE name = ?`
+    const params = [name] 
+    return db.promise().query(sql, params)
+        .then(([rows, fields]) => {
+            console.log(rows)
+            return rows[0].id;
         })
-}
+} 
 
 module.exports = { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId }
