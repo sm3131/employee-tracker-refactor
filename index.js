@@ -4,7 +4,8 @@ const cTable = require('console.table');
 
 const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId } = require('./SQL-queries/departments')
 const { viewRoles, addRole, insertRole, getRoleTitles, getRoleId } = require('./SQL-queries/roles')
-const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee } = require('./SQL-queries/employees')
+const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee } = require('./SQL-queries/employees');
+const ConfirmPrompt = require('inquirer/lib/prompts/confirm');
 
 // Connect to database
 db.connect(err => {
@@ -32,83 +33,103 @@ function welcome() {
                 viewEmployees()
                     .then(() => welcome())
             } else if (trackerOptions === 'Add a department') {
-                addDepartment()
-                    .then(value => {
-                        const departmentName = value.department
-                        insertDepartment(departmentName)
-                            .then(() => welcome())
-                    })
-            } else if (trackerOptions === 'Add a role') {
-                getDepartmentChoices()
-                    .then(departments => addRole(departments)
-                        .then(newRole => {
-                            let role = newRole.roleName;
-                            let salary = newRole.roleSalary;
-                            let roleDepart = newRole.roleDepartment;
-
-                            getDepartmentId(roleDepart)
-                                .then(id => {
-                                    let departId = id
-
-                                    insertRole(role, salary, departId)
+                confirmChoice()
+                    .then(answer => {
+                        if (answer.choiceCheck === false) {
+                            welcome();
+                        } else {
+                            addDepartment()
+                                .then(value => {
+                                    const departmentName = value.department
+                                    insertDepartment(departmentName)
                                         .then(() => welcome())
                                 })
                         }
-                        ))
+                    })
+            } else if (trackerOptions === 'Add a role') {
+                confirmChoice()
+                    .then(answer => {
+                        if (answer.choiceCheck === false) {
+                            welcome();
+                        } else {
+                            getDepartmentChoices()
+                                .then(departments => addRole(departments)
+                                    .then(newRole => {
+                                        let role = newRole.roleName;
+                                        let salary = newRole.roleSalary;
+                                        let roleDepart = newRole.roleDepartment;
+
+                                        getDepartmentId(roleDepart)
+                                            .then(id => {
+                                                let departId = id
+
+                                                insertRole(role, salary, departId)
+                                                    .then(() => welcome())
+                                            })
+                                    }
+                                    ))
+                        }
+                    })
             } else if (trackerOptions === 'Add an employee') {
-                roleTitles = []
-                namesArr = ['null']
-                getRoleTitles()
-                    .then(roles => {
-                        createRolesArr(roles)
-                        //console.log(roleTitles);
-                    })
-                getEmployeeNames()
-                    .then(names => {
-                        createNamesArr(names);
-                        //createManagersArr(names)
-                        //console.log(managersArr)
-                    })
-                addEmployee(roleTitles, namesArr)
-                    .then(value => {
-                        //console.log(value);
-                        getEmployeeParams(value);
+                confirmChoice()
+                    .then(answer => {
+                        if (answer.choiceCheck === false) {
+                            welcome();
+                        } else {
+                            roleTitles = []
+                            namesArr = ['null']
+                            getRoleTitles()
+                                .then(roles => {
+                                    createRolesArr(roles)
+                                })
+                            getEmployeeNames()
+                                .then(names => {
+                                    createNamesArr(names);
+                                })
+                            addEmployee(roleTitles, namesArr)
+                                .then(value => {
+                                    getEmployeeParams(value);
+                                })
+                        }
                     })
             } else if (trackerOptions === 'Update an employee role') {
-                //employeeNamesArr = [];
-                getEmployeeNames()
-                    .then(names => {
-                        createEmployeeNamesArr(names)
-                        //console.log(employeeNamesArr)
+                confirmChoice()
+                    .then(answer => {
+                        if (answer.choiceCheck === false) {
+                            welcome();
+                        } else {
+                            getEmployeeNames()
+                            .then(names => {
+                                createEmployeeNamesArr(names)
+                            })
+                        getRoleTitles()
+                            .then(roles => {
+                                createRolesArr(roles)
+                            })
+                            .then(() => {
+                                updateEmployee(employeeNamesArr, roleTitles)
+                                    .then(value => {
+                                        let employeeName = value.employee;
+                                        let employeeArr = employeeName.split(" ");
+                                        let employeeFirst = employeeArr[0]
+                                        let employeeLast = employeeArr[1];
+                                        let roleChoice = value.newRole;
+                                        let updateParams = [];
+        
+                                        getRoleId(roleChoice)
+                                            .then(roleId => {
+                                                updateParams.push(roleId)
+                                            })
+                                        getEmployeeId(employeeFirst, employeeLast)
+                                            .then(employeeId => {
+                                                updateParams.push(employeeId);
+                                                insertUpdatedEmployee(updateParams)
+                                                    .then(() => welcome())
+                                            })
+                                    })
+                            })
+                        }
                     })
-                getRoleTitles()
-                    .then(roles => {
-                        createRolesArr(roles)
-                        //console.log(roleTitles);
-                    })
-                .then(() => {
-                    updateEmployee(employeeNamesArr, roleTitles)
-                    .then(value => {
-                        let employeeName = value.employee;
-                        let employeeArr = employeeName.split(" ");
-                        let employeeFirst = employeeArr[0]
-                        let employeeLast = employeeArr[1];
-                        let roleChoice = value.newRole;
-                        let updateParams = [];
-
-                        getRoleId(roleChoice)
-                        .then(roleId => {
-                            updateParams.push(roleId)
-                        })
-                        getEmployeeId(employeeFirst, employeeLast)
-                        .then(employeeId => {
-                            updateParams.push(employeeId);
-                            //console.log(updateParams)
-                            insertUpdatedEmployee(updateParams)
-                            .then(() => welcome())
-                        })
-                    })
-                })
             } else if (trackerOptions === 'Delete Department') {
                 departmentsInfo = [];
                 departmentArr = [];
@@ -219,75 +240,6 @@ function insertEmployeeNoManager(employeeParams) {
         .then(() => welcome())
 }
 
-// function updateEmployee(employeesArr, rolesArr) {
-//     inquirer
-//         .prompt([
-//             {
-//                 type: 'list',
-//                 name: 'employee',
-//                 message: 'Select an employee from the list below to update their role.',
-//                 choices: employeesArr
-//             },
-//             {
-//                 type: 'list',
-//                 name: 'newRole',
-//                 message: "Please select the employee's new role from the list of roles below.",
-//                 choices: rolesArr
-//             }
-//         ])
-//         .then(value => {
-//             let employeeChoice = value.employee;
-//             let roleChoice = value.newRole;
-//             let updateParams = [];
-
-//             db.query(`SELECT * FROM roles`, function (err, results) {
-//                 getRoleInfo(results);
-//             })
-
-//             function getRoleInfo(rolesArr) {
-//                 let roleIdArr = rolesArr.filter(getRoleId);
-//                 let roleId = roleIdArr[0].id;
-//                 function getRoleId(item) {
-//                     if (item.title === roleChoice) {
-//                         return item
-//                     }
-//                 }
-//                 updateParams.push(roleId);
-//             }
-
-//             db.query(`SELECT * FROM employees`, function (err, results) {
-//                 getEmployeeInfo(results)
-//             })
-
-//             function getEmployeeInfo(employeesArr) {
-//                 let employeeIdArr = employeesArr.filter(getEmployeeId);
-//                 let employeeId = employeeIdArr[0].id;
-//                 function getEmployeeId(item) {
-//                     if (item.first_name + " " + item.last_name === employeeChoice) {
-//                         return item
-//                     }
-//                 }
-//                 updateParams.push(employeeId);
-//                 insertUpdatedEmployee(updateParams);
-//             }
-//         })
-
-//     function insertUpdatedEmployee(empParams) {
-//         const sql = `UPDATE employees SET roles_id = ? WHERE id = ?`;
-//         const params = empParams;
-
-//         db.promise().query(sql, params)
-//             .then(() => {
-//                 console.log('Employee role has been updated.');
-//                 employeeParams = [];
-//             })
-//             .catch((err) => {
-//                 console.log(err.message);
-//             })
-//             .then(() => welcome())
-//     }
-// }
-
 let departmentsInfo = []
 function findDepartments() {
     return db.promise().query(`SELECT * FROM departments`)
@@ -343,6 +295,17 @@ function deleteDepartment(departId) {
         })
         .then(() => welcome())
 
+}
+
+function confirmChoice() {
+    return inquirer
+        .prompt([
+            {
+                type: 'confirm',
+                name: 'choiceCheck',
+                message: 'If you want to return to the main menu type no(n), if you want to continue to the prompt you chose type yes(y).'
+            }
+        ])
 }
 
 welcome();
