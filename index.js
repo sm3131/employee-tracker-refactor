@@ -4,7 +4,7 @@ const cTable = require('console.table');
 
 const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId, selectDeleteDepartment, deleteDepartment } = require('./SQL-queries/departments')
 const { viewRoles, addRole, insertRole, getRoleTitles, getRoleId, selectDeleteRole, deleteRole } = require('./SQL-queries/roles')
-const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee, selectDeleteEmployee, deleteEmployee } = require('./SQL-queries/employees');
+const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, insertEmployee, insertEmployeeNoManager, updateEmployee, insertUpdatedEmployee, selectDeleteEmployee, deleteEmployee } = require('./SQL-queries/employees');
 const ConfirmPrompt = require('inquirer/lib/prompts/confirm');
 
 // Connect to database
@@ -229,58 +229,24 @@ function getEmployeeParams(value) {
             .then(id => {
                 let roleId = id;
                 employeeParams.push(roleId);
-                //console.log(employeeParams);
             })
 
         getEmployeeId(managerFirst, managerLast)
             .then(manId => {
                 let managerId = manId;
                 employeeParams.push(managerId);
-                //console.log(employeeParams);
-                insertEmployee(employeeParams);
+                insertEmployee(employeeParams)
+                .then(() => welcome())
             })
     } else {
         getRoleId(role)
             .then(id => {
                 let roleId = id;
                 employeeParams.push(roleId);
-                //console.log(employeeParams);
-                insertEmployeeNoManager(employeeParams);
+                insertEmployeeNoManager(employeeParams)
+                .then(() => welcome())
             })
     }
-}
-
-function insertEmployee(employeeParams) {
-    const sql = `INSERT INTO employees (first_name, last_name, roles_id, manager_id)
-    VALUES (?,?,?,?)`
-    const params = employeeParams
-
-    db.promise().query(sql, params)
-        .then(() => {
-            console.log('Employee has been added');
-            employeeParams = [];
-        })
-        .catch((err) => {
-            console.log(err.message);
-        })
-        .then(() => welcome())
-}
-
-function insertEmployeeNoManager(employeeParams) {
-    console.log(employeeParams);
-    const sql = `INSERT INTO employees (first_name, last_name, roles_id)
-    VALUES (?,?,?)`
-    const params = employeeParams
-
-    db.promise().query(sql, params)
-        .then(() => {
-            console.log('Employee has been added');
-            employeeParams = [];
-        })
-        .catch((err) => {
-            console.log(err.message);
-        })
-        .then(() => welcome())
 }
 
 let departmentArr = []

@@ -26,6 +26,7 @@ function getEmployeeNames() {
         })
 }
 
+//Function asking questions about new employee to add
 function addEmployee(roles, managers) {
     return inquirer
         .prompt([
@@ -68,6 +69,41 @@ function addEmployee(roles, managers) {
                 choices: managers
             }
         ])
+}
+
+//Function to insert new employee with manager
+function insertEmployee(employeeParams) {
+    const sql = `INSERT INTO employees (first_name, last_name, roles_id, manager_id)
+    VALUES (?,?,?,?)`
+    const params = employeeParams
+
+    return db.promise().query(sql, params)
+        .then(() => {
+            console.log('Employee has been added');
+            employeeParams = [];
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+        //.then(() => welcome())
+}
+
+//Function to insert new employee without manager
+function insertEmployeeNoManager(employeeParams) {
+    console.log(employeeParams);
+    const sql = `INSERT INTO employees (first_name, last_name, roles_id)
+    VALUES (?,?,?)`
+    const params = employeeParams
+
+    return db.promise().query(sql, params)
+        .then(() => {
+            console.log('Employee has been added');
+            employeeParams = [];
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+        //.then(() => welcome())
 }
 
 //Function to get employee id
@@ -142,4 +178,4 @@ function deleteEmployee(employeeId) {
         })
 }
 
-module.exports = { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee, selectDeleteEmployee, deleteEmployee }
+module.exports = { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, insertEmployee, insertEmployeeNoManager, updateEmployee, insertUpdatedEmployee, selectDeleteEmployee, deleteEmployee }
