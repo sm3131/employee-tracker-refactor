@@ -3,8 +3,8 @@ const inquirer = require('inquirer');
 const cTable = require('console.table');
 
 const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId, selectDeleteDepartment, deleteDepartment } = require('./SQL-queries/departments')
-const { viewRoles, addRole, insertRole, getRoleTitles, getRoleId } = require('./SQL-queries/roles')
-const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee } = require('./SQL-queries/employees');
+const { viewRoles, addRole, insertRole, getRoleTitles, getRoleId, selectDeleteRole, deleteRole } = require('./SQL-queries/roles')
+const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee, selectDeleteEmployee, deleteEmployee } = require('./SQL-queries/employees');
 const ConfirmPrompt = require('inquirer/lib/prompts/confirm');
 
 // Connect to database
@@ -20,7 +20,7 @@ function welcome() {
             type: 'list',
             name: 'trackerOptions',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Delete Department', 'Leave application']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Delete Department', 'Delete Role', 'Delete Employee', 'Leave application']
         })
         .then(({ trackerOptions }) => {
             if (trackerOptions === 'View all departments') {
@@ -85,8 +85,6 @@ function welcome() {
                             getEmployeeNames()
                                 .then(names => {
                                     createManagerNamesArr(names);
-                                    console.log(roleTitles);
-                                    console.log(managerNamesArr);
                                 })
                             addEmployee(roleTitles, managerNamesArr)
                                 .then(value => {
@@ -135,19 +133,53 @@ function welcome() {
                     })
             } else if (trackerOptions === 'Delete Department') {
                 getDepartmentChoices()
-                .then(choices => {
-                    departmentArr = []
-                    createDepartmentArr(choices)
-                    selectDeleteDepartment(departmentArr)
-                    .then(value => {
-                        let departChoice = value.departDelete
-                        getDepartmentId(departChoice)
-                        .then(departId => {
-                            deleteDepartment(departId)
-                            .then(() => welcome())
-                        })
+                    .then(choices => {
+                        departmentArr = []
+                        createDepartmentArr(choices)
+                        selectDeleteDepartment(departmentArr)
+                            .then(value => {
+                                let departChoice = value.departDelete
+                                getDepartmentId(departChoice)
+                                    .then(departId => {
+                                        deleteDepartment(departId)
+                                            .then(() => welcome())
+                                    })
+                            })
                     })
-                })
+            } else if (trackerOptions === 'Delete Role') {
+                getRoleTitles()
+                    .then(titles => {
+                        roleTitles = []
+                        createRolesArr(titles)
+                        selectDeleteRole(roleTitles)
+                            .then(value => {
+                                let roleChoice = value.roleDelete
+                                getRoleId(roleChoice)
+                                    .then(roleId => {
+                                        deleteRole(roleId)
+                                            .then(() => welcome())
+                                    })
+                            })
+                    })
+            }
+            else if (trackerOptions === 'Delete Employee') {
+                getEmployeeNames()
+                    .then(names => {
+                        employeeNamesArr = []
+                        createEmployeeNamesArr(names)
+                        selectDeleteEmployee(employeeNamesArr)
+                            .then(value => {
+                                let employeeName = value.employeeDelete;
+                                let employeeArr = employeeName.split(" ");
+                                let employeeFirst = employeeArr[0]
+                                let employeeLast = employeeArr[1];
+                                getEmployeeId(employeeFirst, employeeLast)
+                                    .then(employeeId => {
+                                        deleteEmployee(employeeId)
+                                            .then(() => welcome())
+                                    })
+                            })
+                    })
             }
             else if (trackerOptions === 'Leave application') {
                 console.log('Have a Great Day!');

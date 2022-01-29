@@ -94,4 +94,31 @@ function getRoleId(name) {
         })
 }
 
-module.exports = { viewRoles, addRole, insertRole, getRoleTitles, getRoleId };
+//Function to select which role to delete
+function selectDeleteRole(roleNames) {
+    return inquirer
+        .prompt(
+            {
+                type: 'list',
+                name: 'roleDelete',
+                message: 'Select which role you would like to delete from the list below.',
+                choices: roleNames
+            }
+        )
+}
+
+//Function to delete role from database roles table
+function deleteRole(roleId) {
+    const sql = `DELETE FROM roles WHERE id = ?`;
+    const params = roleId;
+
+    return db.promise().query(sql, params)
+        .then(() => {
+            console.log('Role has been deleted.');
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+}
+
+module.exports = { viewRoles, addRole, insertRole, getRoleTitles, getRoleId, selectDeleteRole, deleteRole };

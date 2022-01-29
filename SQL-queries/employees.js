@@ -81,6 +81,7 @@ function getEmployeeId(firstName, lastName) {
         })
 }
 
+//Function to ask which employee role to update
 function updateEmployee(employeesArr, rolesArr) {
     return inquirer
         .prompt([
@@ -99,6 +100,7 @@ function updateEmployee(employeesArr, rolesArr) {
         ])
     }
 
+//Function to insert the updated role into employee table
 function insertUpdatedEmployee(empParams) {
     const sql = `UPDATE employees SET roles_id = ? WHERE id = ?`;
     const params = empParams;
@@ -113,4 +115,31 @@ function insertUpdatedEmployee(empParams) {
         })
 }
 
-module.exports = { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee }
+//Function to select which employee to delete
+function selectDeleteEmployee(employeeNames) {
+    return inquirer
+        .prompt(
+            {
+                type: 'list',
+                name: 'employeeDelete',
+                message: 'Select which employee you would like to delete from the list below.',
+                choices: employeeNames
+            }
+        )
+}
+
+//Function to delete employee from database employees table
+function deleteEmployee(employeeId) {
+    const sql = `DELETE FROM employees WHERE id = ?`;
+    const params = employeeId;
+
+    return db.promise().query(sql, params)
+        .then(() => {
+            console.log('Employee has been deleted.');
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+}
+
+module.exports = { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee, selectDeleteEmployee, deleteEmployee }
