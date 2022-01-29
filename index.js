@@ -4,7 +4,7 @@ const cTable = require('console.table');
 
 const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId } = require('./SQL-queries/departments')
 const { viewRoles, addRole, insertRole, getRoleTitles, getRoleId } = require('./SQL-queries/roles')
-const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId } = require('./SQL-queries/employees')
+const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee } = require('./SQL-queries/employees')
 
 // Connect to database
 db.connect(err => {
@@ -75,22 +75,40 @@ function welcome() {
                         getEmployeeParams(value);
                     })
             } else if (trackerOptions === 'Update an employee role') {
-                namesArr = ['null'];
+                //employeeNamesArr = [];
                 getEmployeeNames()
                     .then(names => {
-                        createNamesArr(names)
-                        console.log(namesArr)
+                        createEmployeeNamesArr(names)
+                        //console.log(employeeNamesArr)
                     })
                 getRoleTitles()
                     .then(roles => {
                         createRolesArr(roles)
-                        console.log(roleTitles);
+                        //console.log(roleTitles);
                     })
+                .then(() => {
+                    updateEmployee(employeeNamesArr, roleTitles)
+                    .then(value => {
+                        let employeeName = value.employee;
+                        let employeeArr = employeeName.split(" ");
+                        let employeeFirst = employeeArr[0]
+                        let employeeLast = employeeArr[1];
+                        let roleChoice = value.newRole;
+                        let updateParams = [];
 
-                // .then(() => {
-                //     updateEmployee(employeeNames, roleTitles);
-                // })
-
+                        getRoleId(roleChoice)
+                        .then(roleId => {
+                            updateParams.push(roleId)
+                        })
+                        getEmployeeId(employeeFirst, employeeLast)
+                        .then(employeeId => {
+                            updateParams.push(employeeId);
+                            //console.log(updateParams)
+                            insertUpdatedEmployee(updateParams)
+                            .then(() => welcome())
+                        })
+                    })
+                })
             } else if (trackerOptions === 'Delete Department') {
                 departmentsInfo = [];
                 departmentArr = [];
@@ -118,6 +136,14 @@ function createNamesArr(names) {
     names.forEach(obj => {
         fullName = obj.first_name + " " + obj.last_name
         namesArr.push(fullName)
+    })
+}
+
+let employeeNamesArr = []
+function createEmployeeNamesArr(names) {
+    names.forEach(obj => {
+        fullName = obj.first_name + " " + obj.last_name
+        employeeNamesArr.push(fullName)
     })
 }
 
@@ -193,74 +219,74 @@ function insertEmployeeNoManager(employeeParams) {
         .then(() => welcome())
 }
 
-function updateEmployee(employeesArr, rolesArr) {
-    inquirer
-        .prompt([
-            {
-                type: 'list',
-                name: 'employee',
-                message: 'Select an employee from the list below to update their role.',
-                choices: employeesArr
-            },
-            {
-                type: 'list',
-                name: 'newRole',
-                message: "Please select the employee's new role from the list of roles below.",
-                choices: rolesArr
-            }
-        ])
-        .then(value => {
-            let employeeChoice = value.employee;
-            let roleChoice = value.newRole;
-            let updateParams = [];
+// function updateEmployee(employeesArr, rolesArr) {
+//     inquirer
+//         .prompt([
+//             {
+//                 type: 'list',
+//                 name: 'employee',
+//                 message: 'Select an employee from the list below to update their role.',
+//                 choices: employeesArr
+//             },
+//             {
+//                 type: 'list',
+//                 name: 'newRole',
+//                 message: "Please select the employee's new role from the list of roles below.",
+//                 choices: rolesArr
+//             }
+//         ])
+//         .then(value => {
+//             let employeeChoice = value.employee;
+//             let roleChoice = value.newRole;
+//             let updateParams = [];
 
-            db.query(`SELECT * FROM roles`, function (err, results) {
-                getRoleInfo(results);
-            })
+//             db.query(`SELECT * FROM roles`, function (err, results) {
+//                 getRoleInfo(results);
+//             })
 
-            function getRoleInfo(rolesArr) {
-                let roleIdArr = rolesArr.filter(getRoleId);
-                let roleId = roleIdArr[0].id;
-                function getRoleId(item) {
-                    if (item.title === roleChoice) {
-                        return item
-                    }
-                }
-                updateParams.push(roleId);
-            }
+//             function getRoleInfo(rolesArr) {
+//                 let roleIdArr = rolesArr.filter(getRoleId);
+//                 let roleId = roleIdArr[0].id;
+//                 function getRoleId(item) {
+//                     if (item.title === roleChoice) {
+//                         return item
+//                     }
+//                 }
+//                 updateParams.push(roleId);
+//             }
 
-            db.query(`SELECT * FROM employees`, function (err, results) {
-                getEmployeeInfo(results)
-            })
+//             db.query(`SELECT * FROM employees`, function (err, results) {
+//                 getEmployeeInfo(results)
+//             })
 
-            function getEmployeeInfo(employeesArr) {
-                let employeeIdArr = employeesArr.filter(getEmployeeId);
-                let employeeId = employeeIdArr[0].id;
-                function getEmployeeId(item) {
-                    if (item.first_name + " " + item.last_name === employeeChoice) {
-                        return item
-                    }
-                }
-                updateParams.push(employeeId);
-                insertUpdatedEmployee(updateParams);
-            }
-        })
+//             function getEmployeeInfo(employeesArr) {
+//                 let employeeIdArr = employeesArr.filter(getEmployeeId);
+//                 let employeeId = employeeIdArr[0].id;
+//                 function getEmployeeId(item) {
+//                     if (item.first_name + " " + item.last_name === employeeChoice) {
+//                         return item
+//                     }
+//                 }
+//                 updateParams.push(employeeId);
+//                 insertUpdatedEmployee(updateParams);
+//             }
+//         })
 
-    function insertUpdatedEmployee(empParams) {
-        const sql = `UPDATE employees SET roles_id = ? WHERE id = ?`;
-        const params = empParams;
+//     function insertUpdatedEmployee(empParams) {
+//         const sql = `UPDATE employees SET roles_id = ? WHERE id = ?`;
+//         const params = empParams;
 
-        db.promise().query(sql, params)
-            .then(() => {
-                console.log('Employee role has been updated.');
-                employeeParams = [];
-            })
-            .catch((err) => {
-                console.log(err.message);
-            })
-            .then(() => welcome())
-    }
-}
+//         db.promise().query(sql, params)
+//             .then(() => {
+//                 console.log('Employee role has been updated.');
+//                 employeeParams = [];
+//             })
+//             .catch((err) => {
+//                 console.log(err.message);
+//             })
+//             .then(() => welcome())
+//     }
+// }
 
 let departmentsInfo = []
 function findDepartments() {

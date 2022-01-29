@@ -81,4 +81,36 @@ function getEmployeeId(firstName, lastName) {
         })
 }
 
-module.exports = { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId }
+function updateEmployee(employeesArr, rolesArr) {
+    return inquirer
+        .prompt([
+            {
+                type: 'list',
+                name: 'employee',
+                message: 'Select an employee from the list below to update their role.',
+                choices: employeesArr
+            },
+            {
+                type: 'list',
+                name: 'newRole',
+                message: "Please select the employee's new role from the list of roles below.",
+                choices: rolesArr
+            }
+        ])
+    }
+
+function insertUpdatedEmployee(empParams) {
+    const sql = `UPDATE employees SET roles_id = ? WHERE id = ?`;
+    const params = empParams;
+
+    return db.promise().query(sql, params)
+        .then(() => {
+            console.log('Employee role has been updated.');
+            employeeParams = [];
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+}
+
+module.exports = { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee }
