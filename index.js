@@ -5,7 +5,6 @@ const cTable = require('console.table');
 const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId, selectDeleteDepartment, deleteDepartment } = require('./SQL-queries/departments')
 const { viewRoles, addRole, insertRole, getRoleTitles, getRoleId, selectDeleteRole, deleteRole } = require('./SQL-queries/roles')
 const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, insertEmployee, insertEmployeeNoManager, updateEmployee, insertUpdatedEmployee, selectDeleteEmployee, deleteEmployee } = require('./SQL-queries/employees');
-const ConfirmPrompt = require('inquirer/lib/prompts/confirm');
 
 // Connect to database
 db.connect(err => {
@@ -262,7 +261,7 @@ function confirmChoice() {
             {
                 type: 'confirm',
                 name: 'choiceCheck',
-                message: 'If you want to return to the main menu type no(n), if you want to continue to the prompt you chose type yes(y).'
+                message: 'If you want to return to the main menu type no(n), if you want to continue to the prompt you selected, hit enter.'
             }
         ])
 }

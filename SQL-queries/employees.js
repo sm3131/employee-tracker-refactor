@@ -35,8 +35,11 @@ function addEmployee(roles, managers) {
                 name: 'firstName',
                 message: "Please enter the employee's first name",
                 validate: value => {
-                    if (value) {
+                    if (value && value.length <= 30) {
                         return true;
+                    } else if(value.length > 30) {
+                        console.log("Please enter a name with 30 or less characters");
+                        return false;
                     } else {
                         console.log("Please enter the employee's first name!");
                         return false;
@@ -48,8 +51,11 @@ function addEmployee(roles, managers) {
                 name: 'lastName',
                 message: "Please enter the employee's last name",
                 validate: value => {
-                    if (value) {
+                    if (value && value.length <= 30) {
                         return true;
+                    } else if(value.length > 30) {
+                        console.log("Please enter a name with 30 or less characters");
+                        return false;
                     } else {
                         console.log("Please enter the employee's last name!");
                         return false;

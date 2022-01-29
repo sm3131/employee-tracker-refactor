@@ -12,6 +12,7 @@ function viewDepartments() {
         })
 }
 
+//Function to ask for name of new department to add
 function addDepartment() {
     return inquirer
         .prompt(
@@ -20,8 +21,11 @@ function addDepartment() {
                 name: 'department',
                 message: 'Please enter the name of the department you would like to add.',
                 validate: value => {
-                    if (value) {
+                    if (value && value.length <= 30) {
                         return true;
+                    } else if(value.length > 30) {
+                        console.log("Please enter a department name with 30 or less characters");
+                        return false;
                     } else {
                         console.log("Please enter a department name!");
                         return false;
@@ -30,6 +34,7 @@ function addDepartment() {
             })
 }
 
+//Function to insert new department
 function insertDepartment(department) {
     const sql = `INSERT INTO departments (name) VALUES (?)`;
     const param = [department];
@@ -62,6 +67,7 @@ function getDepartmentId(name) {
         })
 } 
 
+//Function to select which department to delete from database
 function selectDeleteDepartment(departmentNames) {
     return inquirer
         .prompt(
@@ -74,6 +80,7 @@ function selectDeleteDepartment(departmentNames) {
         )
 }
 
+//Function to delete department from database departments table
 function deleteDepartment(departId) {
     const sql = `DELETE FROM departments WHERE id = ?`;
     const params = departId;

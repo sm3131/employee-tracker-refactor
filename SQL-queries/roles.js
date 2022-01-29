@@ -15,6 +15,7 @@ function viewRoles() {
         })
 }
 
+//Function to ask about new role information 
 function addRole(departments) {
     return inquirer
         .prompt([
@@ -23,8 +24,11 @@ function addRole(departments) {
                 name: 'roleName',
                 message: 'Please enter the name of the role you would like to add.',
                 validate: value => {
-                    if (value) {
+                    if (value && value.length <= 30) {
                         return true;
+                    } else if(value.length > 30) {
+                        console.log("Please enter a role name with 30 or less characters");
+                        return false; 
                     } else {
                         console.log("Please enter a role name!");
                         return false;
@@ -37,11 +41,11 @@ function addRole(departments) {
                 message: 'Please enter the salary for the role you are adding.',
                 validate: value => {
                     let include = value.includes(",");
-                    let pass = !isNaN(value)
-                    if (!include && pass) {
+                    let pass = !isNaN(value);
+                    if (!include && pass && value.length <= 10 && value) {
                         return true;
                     } else if (value.length > 10) {
-                        console.log("Please enter a salary value less than 10 digits! Do NOT include commas!");
+                        console.log("Please enter a salary value with 10 digits or less!");
                         return false;
                     }
                     else {
