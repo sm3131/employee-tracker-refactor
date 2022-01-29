@@ -19,19 +19,19 @@ function welcome() {
             type: 'list',
             name: 'trackerOptions',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Delete Department', 'Delete Role', 'Delete Employee', 'Leave application']
+            choices: ['View All Departments', 'View All Roles', 'View All Employees', 'Add a Department', 'Add a Role', 'Add an Employee', 'Update an Employee Role', 'Delete Department', 'Delete Role', 'Delete Employee', 'Leave Application']
         })
         .then(({ trackerOptions }) => {
-            if (trackerOptions === 'View all departments') {
+            if (trackerOptions === 'View All Departments') {
                 viewDepartments()
                     .then(() => welcome())
-            } else if (trackerOptions === 'View all roles') {
+            } else if (trackerOptions === 'View All Roles') {
                 viewRoles()
                     .then(() => welcome())
-            } else if (trackerOptions === 'View all employees') {
+            } else if (trackerOptions === 'View All Employees') {
                 viewEmployees()
                     .then(() => welcome())
-            } else if (trackerOptions === 'Add a department') {
+            } else if (trackerOptions === 'Add a Department') {
                 confirmChoice()
                     .then(answer => {
                         if (answer.choiceCheck === false) {
@@ -45,7 +45,7 @@ function welcome() {
                                 })
                         }
                     })
-            } else if (trackerOptions === 'Add a role') {
+            } else if (trackerOptions === 'Add a Role') {
                 confirmChoice()
                     .then(answer => {
                         if (answer.choiceCheck === false) {
@@ -69,7 +69,7 @@ function welcome() {
                                     ))
                         }
                     })
-            } else if (trackerOptions === 'Add an employee') {
+            } else if (trackerOptions === 'Add an Employee') {
                 confirmChoice()
                     .then(answer => {
                         if (answer.choiceCheck === false) {
@@ -92,7 +92,7 @@ function welcome() {
                                 })
                         }
                     })
-            } else if (trackerOptions === 'Update an employee role') {
+            } else if (trackerOptions === 'Update an Employee Role') {
                 confirmChoice()
                     .then(answer => {
                         if (answer.choiceCheck === false) {
@@ -131,56 +131,75 @@ function welcome() {
                         }
                     })
             } else if (trackerOptions === 'Delete Department') {
-                getDepartmentChoices()
-                    .then(choices => {
-                        departmentArr = []
-                        createDepartmentArr(choices)
-                        selectDeleteDepartment(departmentArr)
-                            .then(value => {
-                                let departChoice = value.departDelete
-                                getDepartmentId(departChoice)
-                                    .then(departId => {
-                                        deleteDepartment(departId)
-                                            .then(() => welcome())
-                                    })
-                            })
+                confirmChoice()
+                    .then(answer => {
+                        if (answer.choiceCheck === false) {
+                            welcome();
+                        } else {
+                            getDepartmentChoices()
+                                .then(choices => {
+                                    departmentArr = []
+                                    createDepartmentArr(choices)
+                                    selectDeleteDepartment(departmentArr)
+                                        .then(value => {
+                                            let departChoice = value.departDelete
+                                            getDepartmentId(departChoice)
+                                                .then(departId => {
+                                                    deleteDepartment(departId)
+                                                        .then(() => welcome())
+                                                })
+                                        })
+                                })
+                        }
                     })
             } else if (trackerOptions === 'Delete Role') {
-                getRoleTitles()
-                    .then(titles => {
-                        roleTitles = []
-                        createRolesArr(titles)
-                        selectDeleteRole(roleTitles)
-                            .then(value => {
-                                let roleChoice = value.roleDelete
-                                getRoleId(roleChoice)
-                                    .then(roleId => {
-                                        deleteRole(roleId)
-                                            .then(() => welcome())
-                                    })
-                            })
+                confirmChoice()
+                    .then(answer => {
+                        if (answer.choiceCheck === false) {
+                            welcome();
+                        } else {
+                            getRoleTitles()
+                                .then(titles => {
+                                    roleTitles = []
+                                    createRolesArr(titles)
+                                    selectDeleteRole(roleTitles)
+                                        .then(value => {
+                                            let roleChoice = value.roleDelete
+                                            getRoleId(roleChoice)
+                                                .then(roleId => {
+                                                    deleteRole(roleId)
+                                                        .then(() => welcome())
+                                                })
+                                        })
+                                })
+                        }
                     })
-            }
-            else if (trackerOptions === 'Delete Employee') {
-                getEmployeeNames()
-                    .then(names => {
-                        employeeNamesArr = []
-                        createEmployeeNamesArr(names)
-                        selectDeleteEmployee(employeeNamesArr)
-                            .then(value => {
-                                let employeeName = value.employeeDelete;
-                                let employeeArr = employeeName.split(" ");
-                                let employeeFirst = employeeArr[0]
-                                let employeeLast = employeeArr[1];
-                                getEmployeeId(employeeFirst, employeeLast)
-                                    .then(employeeId => {
-                                        deleteEmployee(employeeId)
-                                            .then(() => welcome())
-                                    })
-                            })
+            } else if (trackerOptions === 'Delete Employee') {
+                confirmChoice()
+                    .then(answer => {
+                        if (answer.choiceCheck === false) {
+                            welcome();
+                        } else {
+                            getEmployeeNames()
+                                .then(names => {
+                                    employeeNamesArr = []
+                                    createEmployeeNamesArr(names)
+                                    selectDeleteEmployee(employeeNamesArr)
+                                        .then(value => {
+                                            let employeeName = value.employeeDelete;
+                                            let employeeArr = employeeName.split(" ");
+                                            let employeeFirst = employeeArr[0]
+                                            let employeeLast = employeeArr[1];
+                                            getEmployeeId(employeeFirst, employeeLast)
+                                                .then(employeeId => {
+                                                    deleteEmployee(employeeId)
+                                                        .then(() => welcome())
+                                                })
+                                        })
+                                })
+                        }
                     })
-            }
-            else if (trackerOptions === 'Leave application') {
+            } else if (trackerOptions === 'Leave Application') {
                 console.log('Have a Great Day!');
                 process.exit();
             }
@@ -235,7 +254,7 @@ function getEmployeeParams(value) {
                 let managerId = manId;
                 employeeParams.push(managerId);
                 insertEmployee(employeeParams)
-                .then(() => welcome())
+                    .then(() => welcome())
             })
     } else {
         getRoleId(role)
@@ -243,7 +262,7 @@ function getEmployeeParams(value) {
                 let roleId = id;
                 employeeParams.push(roleId);
                 insertEmployeeNoManager(employeeParams)
-                .then(() => welcome())
+                    .then(() => welcome())
             })
     }
 }

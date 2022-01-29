@@ -82,7 +82,6 @@ function insertRole(role, salary, departId) {
 function getRoleTitles() {
     return db.promise().query(`SELECT title FROM roles`)
         .then(([rows, fields]) => {
-            //console.log(rows);
             return rows
         })
 }
@@ -93,7 +92,6 @@ function getRoleId(name) {
     const params = [name]
     return db.promise().query(sql, params)
         .then(([rows, fields]) => {
-            //console.log(rows)
             return rows[0].id;
         })
 }

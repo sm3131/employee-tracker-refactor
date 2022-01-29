@@ -21,7 +21,6 @@ function viewEmployees() {
 function getEmployeeNames() {
     return db.promise().query(`SELECT first_name, last_name FROM employees`)
         .then(([rows, fields]) => {
-            //console.log(rows);
             return rows
         })
 }
@@ -91,7 +90,6 @@ function insertEmployee(employeeParams) {
         .catch((err) => {
             console.log(err.message);
         })
-        //.then(() => welcome())
 }
 
 //Function to insert new employee without manager
@@ -109,7 +107,6 @@ function insertEmployeeNoManager(employeeParams) {
         .catch((err) => {
             console.log(err.message);
         })
-        //.then(() => welcome())
 }
 
 //Function to get employee id
@@ -118,7 +115,6 @@ function getEmployeeId(firstName, lastName) {
     const params = [firstName, lastName]
     return db.promise().query(sql, params)
         .then(([rows, fields]) => {
-            //console.log(rows)
             return rows[0].id;
         })
 }

@@ -62,7 +62,6 @@ function getDepartmentId(name) {
     const params = [name] 
     return db.promise().query(sql, params)
         .then(([rows, fields]) => {
-            //console.log(rows)
             return rows[0].id;
         })
 } 
