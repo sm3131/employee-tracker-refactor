@@ -2,7 +2,7 @@ const db = require('./db/connection');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 
-const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId } = require('./SQL-queries/departments')
+const { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId, selectDeleteDepartment, deleteDepartment } = require('./SQL-queries/departments')
 const { viewRoles, addRole, insertRole, getRoleTitles, getRoleId } = require('./SQL-queries/roles')
 const { viewEmployees, getEmployeeNames, addEmployee, getEmployeeId, updateEmployee, insertUpdatedEmployee } = require('./SQL-queries/employees');
 const ConfirmPrompt = require('inquirer/lib/prompts/confirm');
@@ -77,17 +77,20 @@ function welcome() {
                             welcome();
                         } else {
                             roleTitles = []
-                            namesArr = ['null']
+                            managerNamesArr = ['null']
                             getRoleTitles()
                                 .then(roles => {
                                     createRolesArr(roles)
                                 })
                             getEmployeeNames()
                                 .then(names => {
-                                    createNamesArr(names);
+                                    createManagerNamesArr(names);
+                                    console.log(roleTitles);
+                                    console.log(managerNamesArr);
                                 })
-                            addEmployee(roleTitles, namesArr)
+                            addEmployee(roleTitles, managerNamesArr)
                                 .then(value => {
+                                    employeeParams = []
                                     getEmployeeParams(value);
                                 })
                         }
@@ -99,44 +102,52 @@ function welcome() {
                             welcome();
                         } else {
                             getEmployeeNames()
-                            .then(names => {
-                                createEmployeeNamesArr(names)
-                            })
-                        getRoleTitles()
-                            .then(roles => {
-                                createRolesArr(roles)
-                            })
-                            .then(() => {
-                                updateEmployee(employeeNamesArr, roleTitles)
-                                    .then(value => {
-                                        let employeeName = value.employee;
-                                        let employeeArr = employeeName.split(" ");
-                                        let employeeFirst = employeeArr[0]
-                                        let employeeLast = employeeArr[1];
-                                        let roleChoice = value.newRole;
-                                        let updateParams = [];
-        
-                                        getRoleId(roleChoice)
-                                            .then(roleId => {
-                                                updateParams.push(roleId)
-                                            })
-                                        getEmployeeId(employeeFirst, employeeLast)
-                                            .then(employeeId => {
-                                                updateParams.push(employeeId);
-                                                insertUpdatedEmployee(updateParams)
-                                                    .then(() => welcome())
-                                            })
-                                    })
-                            })
+                                .then(names => {
+                                    createEmployeeNamesArr(names)
+                                })
+                            getRoleTitles()
+                                .then(roles => {
+                                    createRolesArr(roles)
+                                })
+                                .then(() => {
+                                    updateEmployee(employeeNamesArr, roleTitles)
+                                        .then(value => {
+                                            let employeeName = value.employee;
+                                            let employeeArr = employeeName.split(" ");
+                                            let employeeFirst = employeeArr[0]
+                                            let employeeLast = employeeArr[1];
+                                            let roleChoice = value.newRole;
+                                            let updateParams = [];
+
+                                            getRoleId(roleChoice)
+                                                .then(roleId => {
+                                                    updateParams.push(roleId)
+                                                })
+                                            getEmployeeId(employeeFirst, employeeLast)
+                                                .then(employeeId => {
+                                                    updateParams.push(employeeId);
+                                                    insertUpdatedEmployee(updateParams)
+                                                        .then(() => welcome())
+                                                })
+                                        })
+                                })
                         }
                     })
             } else if (trackerOptions === 'Delete Department') {
-                departmentsInfo = [];
-                departmentArr = [];
-                findDepartments()
-                    .then(() => {
-                        whichDepartment(departmentArr);
+                getDepartmentChoices()
+                .then(choices => {
+                    departmentArr = []
+                    createDepartmentArr(choices)
+                    selectDeleteDepartment(departmentArr)
+                    .then(value => {
+                        let departChoice = value.departDelete
+                        getDepartmentId(departChoice)
+                        .then(departId => {
+                            deleteDepartment(departId)
+                            .then(() => welcome())
+                        })
                     })
+                })
             }
             else if (trackerOptions === 'Leave application') {
                 console.log('Have a Great Day!');
@@ -152,11 +163,11 @@ function createRolesArr(roles) {
     })
 }
 
-let namesArr = ['null']
-function createNamesArr(names) {
+let managerNamesArr = ['null']
+function createManagerNamesArr(names) {
     names.forEach(obj => {
         fullName = obj.first_name + " " + obj.last_name
-        namesArr.push(fullName)
+        managerNamesArr.push(fullName)
     })
 }
 
@@ -176,7 +187,7 @@ function getEmployeeParams(value) {
 
     employeeParams.push(firstName, lastName)
 
-    if (!value.employeeManager === 'null') {
+    if (value.employeeManager != 'null') {
         let managerName = value.employeeManager
         let managerArr = managerName.split(" ");
         let managerFirst = managerArr[0]
@@ -240,61 +251,11 @@ function insertEmployeeNoManager(employeeParams) {
         .then(() => welcome())
 }
 
-let departmentsInfo = []
-function findDepartments() {
-    return db.promise().query(`SELECT * FROM departments`)
-        .then(([rows, fields]) => {
-            createDepartmentArr(rows);
-        })
-}
-
 let departmentArr = []
 function createDepartmentArr(departments) {
-    let depArr = departments.forEach(obj => {
+    departments.forEach(obj => {
         departmentArr.push(obj.name);
-        departmentsInfo.push(obj);
     })
-}
-
-function whichDepartment(departmentNames) {
-    inquirer
-        .prompt(
-            {
-                type: 'list',
-                name: 'departDelete',
-                message: 'Select which department you would like to delete from the list below.',
-                choices: departmentNames
-            }
-        )
-        .then(value => {
-            // console.log(value.departDelete);
-            let departChoice = value.departDelete
-            //console.log(departmentsInfo)
-            let departmentIdArr = departmentsInfo.filter(getDepartId);
-            let departmentId = departmentIdArr[0].id
-
-            function getDepartId(item) {
-                if (item.name === departChoice) {
-                    return item;
-                }
-            }
-            deleteDepartment(departmentId);
-        })
-}
-
-function deleteDepartment(departId) {
-    const sql = `DELETE FROM departments WHERE id = ?`;
-    const params = departId;
-
-    db.promise().query(sql, params)
-        .then(() => {
-            console.log('Department has been deleted.');
-        })
-        .catch((err) => {
-            console.log(err.message);
-        })
-        .then(() => welcome())
-
 }
 
 function confirmChoice() {

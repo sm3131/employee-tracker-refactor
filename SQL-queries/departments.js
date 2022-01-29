@@ -62,4 +62,29 @@ function getDepartmentId(name) {
         })
 } 
 
-module.exports = { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId }
+function selectDeleteDepartment(departmentNames) {
+    return inquirer
+        .prompt(
+            {
+                type: 'list',
+                name: 'departDelete',
+                message: 'Select which department you would like to delete from the list below.',
+                choices: departmentNames
+            }
+        )
+}
+
+function deleteDepartment(departId) {
+    const sql = `DELETE FROM departments WHERE id = ?`;
+    const params = departId;
+
+    return db.promise().query(sql, params)
+        .then(() => {
+            console.log('Department has been deleted.');
+        })
+        .catch((err) => {
+            console.log(err.message);
+        })
+}
+
+module.exports = { viewDepartments, addDepartment, insertDepartment, getDepartmentChoices, getDepartmentId, selectDeleteDepartment, deleteDepartment }
