@@ -4,7 +4,7 @@
 
 ## Description
 
-The Employee Tracker application was created to allow users to manage company databases. This application is run in the node.js environment, and using the command line, users can follow prompts to view, manage, and update their company information. The employee tracker contains a central company database with various tables containing departments, roles, and employees. Each table in the database can be viewed and managed, depending on what users chooses. For example the user can view each table, add to each table, update table information, or delete table information. 
+The Employee Tracker application was created to allow users to manage a company database. This application is run in the node.js environment, and using the command line, users can follow prompts to view, manage, and update their company information. The Employee Tracker contains a central company database with various tables containing departments, roles, and employees. Each table in the database can be viewed and managed, depending on what users choose. For example the user can view each table, add to each table, update table information, or delete table information. 
 
 ## Table of Contents
   * [Built With](#built-with)
@@ -33,11 +33,17 @@ If you would like to access the code for this application, please visit [GitHub]
 
 ## Preview
 
-Click on the link below to watch the Screencastify video that walks the user through proper usage of the application:
+The Screencasify video for this application had to be split into two separate videos due to the 5 minute time limit Screencastify enforces.
+Click on the links below to watch the Screencastify part 1&2 Employee Tracker videos that walk the user through proper usage of the application:
 
+Part 1:
+https://watch.screencastify.com/v/cOlIV7wQOKda4Z2ZGMPS
+
+Part 2:
+https://watch.screencastify.com/v/xR5xT77JG5CnHCMat1tn
 
 Employee Tracker application viewed from the command line:
-![employee-tracker](./src/images/)
+![employee-tracker](./images/employee-tracker.png)
 
 ## Installation
 To install the Employee Tracker application complete the following steps:
@@ -49,10 +55,10 @@ To install the Employee Tracker application complete the following steps:
 6. Once you have node.js installed, make sure you are still in the employee tracker directory in the command line, and then run the following command *npm install* to install the required packages and dependencies to run the application.
 7. Next you will need to either install or make sure you have mysql installed on your machine. MySQL will allow you to generate and seed the employee tracker database locally.
 8. To check if you have mysql installed run the command *mysql -v*, this should provide you with the current mysql version you have installed, if you are not provided with the mysql version information then you can follow the installation steps for installing mysql by visiting this website (https://dev.mysql.com/doc/mysql-installation-excerpt/5.7/en/installing.html).
-9. Once you have installed mysql on your local machine enter into the mysql shell by running the command *mysql -u username -p* (enter your username in pace of username), then you should be prompted to enter your mysql password.
+9. Once you have installed mysql on your local machine enter into the mysql shell by running the command *mysql -u username -p* (enter your username in place of username), then you should be prompted to enter your mysql password.
 10. Once you are in the mysql shell you should see mysql> in the command line where you will enter in your commands.
 11. Then to create the database run *source db/db.sql*, then run *USE company* to use the company database, then run *source db/schema.sql* to create the tables, and lastly run *source db/seeds.sql* to seed the tables with starter data.   
-12. After you have node.js and the required npm dependencies installed and you have installed mysql and created the database with seeded tables, you are ready to run the application via node.js using the command line.
+12. After you have node.js and the required npm dependencies installed, and you have installed mysql and created the database with seeded tables, you are ready to run the application via node.js using the command line.
 
 ## Usage
 To use the employee tracker application complete the following steps:
@@ -62,12 +68,12 @@ To use the employee tracker application complete the following steps:
 4. If the program is running properly you should be confronted with some initial intro text and the first user prompt asking what you would like to do.
 5. There are a variety of options to view and manage various components of your company database, so choose the options that fulfill your needs.
 6. For example if you are using the application to view your database information you can choose the "View All Departments", "View All Roles", or "View All Employees" options. Any of these options will present you with a nicely formatted table of information for the corresponding category you chose.
-7. If you want to add database information, you can choose to either "Add a Department", Add a Role", or "Add an Employee". All of these option will present you with prompts to either enter or select information for each category. For example when adding a new role you will be asked to enter the role name, role salary, and select which department the role belongs to, when complete the application will notify you that a role has been added and you can view this addition by selecting "View All Roles"
+7. If you want to add database information, you can choose to either "Add a Department", Add a Role", or "Add an Employee". All of these options will present you with prompts to either enter or select information for each category. For example when adding a new role you will be asked to enter the role name, role salary, and select which department the role belongs to, when complete the application will notify you that a role has been added and you can view this addition by selecting "View All Roles"
 8. If you want to update an employee's role choose the "Update and Employee Role" option and you can then select which employee to update and the role you want to change.
 9. If you want to delete any data you have the option to either "Delete a Department", "Delete a Role", or "Delete an Employee". All of these options will provide you with a current list of data from the selected category, and you can choose which data to delete permanently from the database.
 10. If you are finished using the application, you can select the "Leave Application" option to exit the app and carry on with your day. 
 
-**IMPORTANT NOTE:** Deleting a department, role, or employee will permanently delete this data from the database. You can always manually enter this data back into the database if you accidentally delete an entry you meant to keep in the database.
+**IMPORTANT NOTE:** Deleting a department, role, or employee will permanently delete this data from the database. You can always manually enter this data or you can rerun your seeds file to insert the initial starter data back into the database if you accidentally delete an entry you meant to keep in the database.
 
 ## License
 
